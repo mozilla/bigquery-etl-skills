@@ -47,8 +47,7 @@ You should see all 7 BigQuery ETL skills listed.
 Once installed:
 
 - Check out the [Quick Start](quick-start.md) guide for hands-on examples
-- Read about [Using Skills](using-skills.md) to understand how to work with the plugin
-- Explore the [Skills Reference](../skills/overview.md) for detailed documentation
+- Explore the [Skills Overview](../skills/overview.md) for detailed documentation
 
 ## Troubleshooting
 
