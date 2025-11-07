@@ -1,1 +1,5 @@
-# bigquery-etl-skills
+# BigQuery ETL Skills
+
+A comprehensive Claude Code plugin that accelerates development workflows for Mozilla's [bigquery-etl](https://github.com/mozilla/bigquery-etl) repository. This plugin provides specialized skills for writing SQL queries, generating unit tests, managing metadata and schemas, configuring data quality monitoring, and gathering requirements for new data models—all following Mozilla's conventions and best practices.
+
+📚 **[View Full Documentation](https://mozilla.github.io/bigquery-etl-skills/)** | 🚀 **[Quick Start Guide](https://mozilla.github.io/bigquery-etl-skills/getting-started/quick-start/)** | 📖 **[Skills Reference](https://mozilla.github.io/bigquery-etl-skills/skills/overview/)**
