@@ -1,0 +1,9 @@
+# Example query parameters file
+# File: query_params.yaml
+# Note: Must be an array (starts with -)
+- name: submission_date
+  type: DATE
+  value: "2025-01-01"
+- name: min_active_hours
+  type: FLOAT64
+  value: "1.0"

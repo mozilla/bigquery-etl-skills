@@ -1,0 +1,29 @@
+friendly_name: Table Name
+description: >
+  Description of what this table contains and its purpose.
+  Mention key use cases and any important caveats.
+owners:
+  - email@mozilla.com
+  - another@mozilla.com
+  # Optional: Add GitHub team for better coverage
+  # - mozilla/team_name
+  # Use: python scripts/detect_teams.py --dataset <dataset_name> to find relevant teams
+labels:
+  application: firefox
+  schedule: daily
+  table_type: client_level
+  dag: bqetl_main_summary
+  owner1: username
+scheduling:
+  dag_name: bqetl_main_summary
+  date_partition_parameter: submission_date
+bigquery:
+  time_partitioning:
+    type: day
+    field: submission_date
+    require_partition_filter: true
+    expiration_days: 775
+  clustering:
+    fields:
+      - sample_id
+      - client_id

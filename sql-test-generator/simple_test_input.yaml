@@ -1,0 +1,7 @@
+# Example input fixture for a simple query
+# File: moz-fx-data-shared-prod.telemetry.clients_daily.yaml
+- client_id: "abc123"
+  submission_date: "2025-01-01"
+  search_count: 5
+  active_hours: 2.5
+  country: "US"

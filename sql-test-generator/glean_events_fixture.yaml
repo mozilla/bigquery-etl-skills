@@ -1,0 +1,24 @@
+# Example Glean telemetry event structure with extras
+# File: moz-fx-data-shared-prod.pocket.desktop_impression.yaml
+- submission_timestamp: "2024-12-15 14:30:00"
+  document_id: "doc123"
+  client_info:
+    client_id: "client_456"
+    app_display_version: "121.0.0"
+  events:
+    - category: "pocket"
+      name: "impression"
+      extra:
+        - key: "recommendation_id"
+          value: "rec_001"
+        - key: "tile_id"
+          value: "2001"
+        - key: "position"
+          value: "0"
+    - category: "pocket"
+      name: "click"
+      extra:
+        - key: "recommendation_id"
+          value: "rec_001"
+        - key: "tile_id"
+          value: "2001"

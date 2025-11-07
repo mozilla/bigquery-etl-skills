@@ -1,0 +1,59 @@
+# Custom Schedule DAG Template
+# Add this to the bottom of dags.yaml
+# Replace <dag_name>, <owner_email>, <team_email>, and other placeholders
+
+bqetl_<dag_name>:
+  schedule_interval: <custom_schedule>  # See examples below
+  description: |
+    Brief description of what this DAG does.
+
+    Include:
+    - Data sources (where data comes from)
+    - Purpose (what tables/metrics it produces)
+    - Why this specific schedule? (business requirements, data availability)
+    - Important notes (dependencies, known issues, timing considerations)
+  default_args:
+    owner: <owner_email>@mozilla.com
+    start_date: "YYYY-MM-DD"  # When to start processing
+    email:
+      - "telemetry-alerts@mozilla.com"
+      - "<owner_email>@mozilla.com"
+      # Add team emails if applicable
+    retries: 1  # Adjust based on reliability needs
+    retry_delay: 10m  # Adjust based on schedule frequency
+  tags:
+    - impact/tier_2  # tier_1 (critical), tier_2 (important), tier_3 (nice-to-have)
+  # Optional: Uncomment if needed
+  # catchup: true  # Enable backfilling for historical data
+  # depends_on_past: true  # Require previous run to succeed
+
+# Common custom schedule patterns:
+
+# INTERVAL SCHEDULES (simpler format):
+# 3h     - Every 3 hours
+# 6h     - Every 6 hours
+# 12h    - Every 12 hours
+# 30m    - Every 30 minutes
+
+# CRON SCHEDULES (more control):
+# 0 0 * * 0       - Weekly on Sunday at midnight
+# 0 0 * * 1       - Weekly on Monday at midnight
+# 0 0 1 * *       - Monthly on the 1st at midnight
+# 0 */6 * * *     - Every 6 hours at :00
+# 0 0,12 * * *    - Twice daily at midnight and noon
+# 0 2 * * 1-5     - Weekdays only at 2 AM
+# 0 0 15 * *      - Monthly on the 15th at midnight
+
+# EXAMPLES:
+
+# Weekly reporting DAG:
+# schedule_interval: 0 2 * * 1  # Monday at 2 AM
+
+# Every 3 hours:
+# schedule_interval: 3h
+
+# Monthly aggregation:
+# schedule_interval: 0 0 1 * *  # 1st of month at midnight
+
+# Twice daily:
+# schedule_interval: 0 2,14 * * *  # 2 AM and 2 PM

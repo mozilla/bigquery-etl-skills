@@ -1,0 +1,21 @@
+# TIP: Use base schemas to auto-populate descriptions for standard fields:
+# ./bqetl query schema update <dataset>.<table> --use-global-schema
+# Preview changes first: python scripts/preview_base_schema.py <dataset>.<table>
+#
+# Standard fields in global.yaml: submission_date, client_id, sample_id, country,
+# dau, wau, mau, normalized_channel, etc.
+# See: bigquery_etl/schema/global.yaml for full list
+
+fields:
+  - name: submission_date
+    type: DATE
+    mode: NULLABLE
+    description: Date when the data was submitted
+  - name: client_id
+    type: STRING
+    mode: NULLABLE
+    description: Unique identifier for the client
+  - name: sample_id
+    type: INTEGER
+    mode: NULLABLE
+    description: Sample ID for the client, used for sampling (0-99)
