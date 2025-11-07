@@ -1,6 +1,0 @@
-# Example expected output for a simple query
-# File: expect.yaml
-- client_id: "abc123"
-  total_searches: 5
-  first_seen_date: "2025-01-01"
-  country: "US"

@@ -1,7 +1,0 @@
-# Example UNION ALL test - Source 1: Legacy telemetry
-# File: moz-fx-data-shared-prod.legacy_source.table.yaml
-- submission_timestamp: "2024-12-15 10:00:00"
-  document_id: "doc1"
-  version: "120.0.0"
-  event_count: 5
-  source_type: "legacy"
