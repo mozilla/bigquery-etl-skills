@@ -1,0 +1,30 @@
+{
+  "name": "bigquery-etl-skills",
+  "owner": {
+    "name": "Chelsey Beck",
+    "email": "cbeck@mozilla.com"
+  },
+  "metadata": {
+    "description": "BigQuery ETL Skills Plugin",
+    "version": "1.1.0",
+    "repository": "https://github.com/mozilla/bigquery-etl-skills",
+    "changelog": "https://github.com/mozilla/bigquery-etl-skills/blob/main/CHANGELOG.md"
+  },
+  "plugins": [
+    {
+      "name": "bigquery-etl-skills",
+      "description": "Specialized skills for Mozilla's BigQuery ETL repository workflows including query writing, testing, metadata management, and monitoring configuration",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./bigquery-etl-core",
+        "./model-requirements",
+        "./query-writer",
+        "./metadata-manager",
+        "./sql-test-generator",
+        "./bigconfig-generator",
+        "./skill-creator"
+      ]
+    }
+  ]
+}
