@@ -68,11 +68,11 @@ See the [Skills Overview](overview.md) for detailed information about skill anat
 
 <div class="grid cards" markdown>
 
-- :material-download: **[Installation Guide](getting-started/installation.md)**
+- :material-download: **[Installation Guide](../getting-started/installation.md)**
 
     Get up and running in minutes
 
-- :material-lightning-bolt: **[Quick Start](getting-started/quick-start.md)**
+- :material-lightning-bolt: **[Quick Start](../getting-started/quick-start.md)**
 
     Jump right in with practical examples
 
