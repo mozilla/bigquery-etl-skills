@@ -64,9 +64,14 @@ nav:
   - Getting Started:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
+    - Skills vs Agents: getting-started/skills-vs-agents.md
   - Skills:
     - Overview: skills/overview.md
     - Available Skills: skills/available-skills.md
+  - Agents:
+    - Overview: agents/overview.md
+    - Available Agents: agents/available-agents.md
+    - Creating Agents: agents/creating-agents.md
 
 extra_css:
   - stylesheets/extra.css
