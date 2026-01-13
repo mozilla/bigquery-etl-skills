@@ -83,8 +83,6 @@ Helper scripts for validation, generation, or analysis—used when bash operatio
 
 ## Quick Links
 
-## Quick Links
-
 <div class="grid cards" markdown>
 
 - :material-download: **[Installation Guide](../getting-started/installation.md)**
