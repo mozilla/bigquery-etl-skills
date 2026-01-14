@@ -1,10 +1,11 @@
 # BigQuery ETL Skills
 
-A comprehensive Claude Code plugin that accelerates development workflows on Mozilla's [bigquery-etl](https://github.com/mozilla/bigquery-etl) repository using [Claude Code Skills](https://support.claude.com/en/articles/12512176-what-are-skills) and specialized agents.
-
+A comprehensive Claude Code plugin that accelerates development workflows on Mozilla's [bigquery-etl](https://github.com/mozilla/bigquery-etl) repository using [Claude Code Skills](https://support.claude.com/en/articles/12512176-what-are-skills) and [specialized agents](https://code.claude.com/docs/en/sub-agents).
 
 !!! note "Designed for bigquery-etl"
-    This plugin works best when launched from your local development environment within the [bigquery-etl](https://github.com/mozilla/bigquery-etl) repository.
+    Follow the [Installation](http://127.0.0.1:8000/bigquery-etl-skills/getting-started/installation/) guide to install the plugin and you're ready to go. The [Quickstart Guide](/getting-started/quick-start/) provides examples to get you started.
+    
+    This plugin works best when launched from your local development environment within the [bigquery-etl](https://github.com/mozilla/bigquery-etl) repository. 
 
 ## What's Included
 
@@ -48,16 +49,6 @@ Once installed, you can:
 
 - **Set up production monitoring**: Create Bigeye data quality configurations
 
-## Getting Started
-
-For more information about skills and agents:
-
-- [What are skills?](https://support.claude.com/en/articles/12512176-what-are-skills)
-- [Using skills in Claude](https://support.claude.com/en/articles/12512180-using-skills-in-claude)
-- [How to create custom skills](https://support.claude.com/en/articles/12512198-creating-custom-skills)
-- [Equipping agents for the real world with Agent Skills](https://anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
-
-
 ## Quick Links
 
 <div class="grid cards" markdown>
@@ -76,7 +67,7 @@ For more information about skills and agents:
 
 - :material-cog: **[Available Skills](skills/available-skills.md)**
 
-    See all 7 specialized skills
+    See all specialized skills
 
 - :material-robot: **[Available Agents](agents/available-agents.md)**
 

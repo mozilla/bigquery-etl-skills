@@ -65,6 +65,7 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
     - Skills vs Agents: getting-started/skills-vs-agents.md
+    - Local Development: getting-started/local-development.md
   - Skills:
     - Overview: skills/overview.md
     - Available Skills: skills/available-skills.md
@@ -72,6 +73,8 @@ nav:
     - Overview: agents/overview.md
     - Available Agents: agents/available-agents.md
     - Creating Agents: agents/creating-agents.md
+    - Prompt Patterns: agents/agent-prompt-patterns.md
+    - Testing Agents: agents/testing-agents.md
 
 extra_css:
   - stylesheets/extra.css

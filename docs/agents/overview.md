@@ -4,7 +4,7 @@ Agents are autonomous AI assistants that coordinate multiple skills to accomplis
 
 ## What Are Agents?
 
-**Agents** are specialized Claude Code subagents that:
+**Agents** are specialized [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) that:
 
 - **Operate autonomously**: Make decisions about how to accomplish goals
 - **Coordinate skills**: Invoke multiple skills in sequence to complete workflows

@@ -40,14 +40,14 @@ The skills should now be available. Open a new Claude Code session and ask:
 What skills are available?
 ```
 
-You should see all 7 BigQuery ETL skills listed.
+You should see all BigQuery ETL skills listed.
 
 ## Next Steps
 
 Once installed:
 
 - Check out the [Quick Start](quick-start.md) guide for hands-on examples
-- Explore the [Skills Overview](../skills/overview.md) for detailed documentation
+- Explore the [Skills Overview](../skills/overview.md) or [Agents Overview](http://127.0.0.1:8000/bigquery-etl-skills/agents/overview/) for detailed documentation
 
 ## Troubleshooting
 
