@@ -40,11 +40,12 @@ Result: query.sql file
 Think of agents as **independent workers** that use skills:
 
 ```
-User: "Build a complete user retention table"
+User: "Build a user_retention_daily table that calculates
+       7-day rolling retention from events_daily, partitioned by date"
         ↓
-Agent: "I'll handle this end-to-end"
+Agent: "I have clear requirements, I'll handle this end-to-end"
         ↓
-Agent: [Uses model-requirements skill → gathers specs]
+Agent: [Validates requirements are sufficient]
 Agent: [Uses query-writer skill → creates query]
 Agent: [Uses metadata-manager skill → generates schema]
 Agent: [Uses sql-test-generator skill → creates tests]
@@ -123,12 +124,12 @@ Claude will:
 
 ---
 
-### Scenario 2: "Build a new table called user_retention_daily"
+### Scenario 2: "Build a new table for user retention with 7-day rolling window from events_daily"
 
-**✅ Use: `etl-orchestrator` agent**
+**✅ Use: `etl-orchestrator` agent** (you've provided clear requirements)
 
 The agent will:
-1. Gather requirements (what metrics, what sources)
+1. Validate requirements are sufficient
 2. Create query.sql
 3. Generate schema.yaml with descriptions
 4. Create metadata.yaml with DAG config
@@ -136,6 +137,9 @@ The agent will:
 6. Run tests and fix any issues
 7. Add monitoring if appropriate
 8. Report what was created
+
+!!! tip "What if requirements are unclear?"
+    If you're not sure what you need, use the `model-requirements` skill first to gather requirements interactively, then invoke the agent.
 
 **Why not skills?**
 - Multiple files needed (query, schema, metadata, tests)

@@ -69,7 +69,7 @@ Agents access skills defined in their `skills:` frontmatter field:
 ```markdown
 ---
 name: etl-orchestrator
-skills: bigquery-etl-core, query-writer, metadata-manager, sql-test-generator
+skills: bigquery-etl-core, query-writer, metadata-manager, sql-test-generator, bigconfig-generator
 ---
 ```
 
@@ -83,11 +83,11 @@ Agents leverage existing skills rather than duplicating logic:
 
 ```mermaid
 graph TB
-    A[User Request] --> B[etl-orchestrator Agent]
-    B --> C[model-requirements Skill]
-    B --> D[query-writer Skill]
-    B --> E[metadata-manager Skill]
-    B --> F[sql-test-generator Skill]
+    A[User Request with Requirements] --> B[etl-orchestrator Agent]
+    B --> C[query-writer Skill]
+    B --> D[metadata-manager Skill]
+    B --> E[sql-test-generator Skill]
+    B --> F[bigconfig-generator Skill]
     C --> G[Complete Data Model]
     D --> G
     E --> G
@@ -134,7 +134,7 @@ Agents report their work transparently:
 ```markdown
 Phase 1: Planning
 ✓ Loaded bigquery-etl-core for conventions
-✓ Invoked model-requirements to gather specs
+✓ Validated requirements are sufficient
 ✓ Created implementation plan
 
 Phase 2: Implementation

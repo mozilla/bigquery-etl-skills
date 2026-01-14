@@ -1,22 +1,22 @@
 ---
 name: etl-orchestrator
-description: Autonomously builds complete BigQuery data models end-to-end from requirements through testing and monitoring. Use when implementing full ETL pipelines, new tables, or complex multi-step data workflows.
-skills: bigquery-etl-core, model-requirements, query-writer, metadata-manager, sql-test-generator, bigconfig-generator
+description: Autonomously builds complete BigQuery data models from provided requirements through testing and monitoring. Use when you have clear requirements and need full ETL pipelines, new tables, or complex multi-step data workflows implemented end-to-end.
+skills: bigquery-etl-core, query-writer, metadata-manager, sql-test-generator, bigconfig-generator
 model: opus
 ---
 
 # ETL Orchestrator Agent
 
-The ETL Orchestrator is an autonomous agent that builds complete BigQuery data models from start to finish, coordinating multiple skills to deliver production-ready tables with tests and monitoring.
+The ETL Orchestrator is an autonomous agent that builds complete BigQuery data models from provided requirements, coordinating multiple skills to deliver production-ready tables with tests and monitoring. Give it clear requirements and it handles the rest.
 
 ## What This Agent Does
 
 This agent autonomously:
 
-1. **Gathers requirements** using model-requirements skill
-   - Interviews stakeholders through structured questions
-   - Validates dependencies and sources
-   - Identifies downstream impacts
+1. **Validates requirements** are sufficient to proceed
+   - Checks that source tables and key logic are defined
+   - Confirms partitioning and scheduling needs are clear
+   - Asks targeted clarifying questions only if critical info is missing
 
 2. **Writes queries** using query-writer skill
    - Creates SQL or Python queries following Mozilla conventions
@@ -45,12 +45,35 @@ This agent autonomously:
 
 ## When to Use This Agent
 
-Use the ETL orchestrator when you need:
+Use the ETL orchestrator when you have clear requirements and need:
 
 - **Complete table implementation**: "Build a new table for user retention metrics"
 - **End-to-end workflows**: "Implement this data model with tests and monitoring"
 - **Complex multi-step tasks**: "Create a derived table that aggregates events by user"
 - **Production-ready deliverables**: Tasks that need to be fully tested and documented
+
+## Providing Requirements
+
+The orchestrator expects requirements to be provided upfront. You can either:
+
+**1. Provide requirements directly in your request:**
+```
+"Build a user_retention_daily table that:
+- Calculates 7-day rolling retention from telemetry.events_daily
+- Partitions by submission_date
+- Groups by normalized_channel and country
+- Runs daily after events_daily completes"
+```
+
+**2. Use the model-requirements skill first:**
+```
+User: "I need to build a new retention table"
+Claude: [Invokes model-requirements skill for interactive interview]
+... requirements gathered through structured questions ...
+Claude: [Invokes etl-orchestrator with gathered requirements]
+```
+
+The more context you provide upfront, the more autonomously the agent can work.
 
 ## When NOT to Use This Agent
 
@@ -65,7 +88,8 @@ Don't use this agent for:
 
 ### Phase 1: Planning
 - Loads bigquery-etl-core for context on conventions
-- Invokes model-requirements to understand what needs to be built
+- Validates that provided requirements are sufficient
+- Asks targeted clarifying questions if critical info is missing
 - Creates implementation plan based on requirements
 
 ### Phase 2: Implementation
@@ -130,13 +154,14 @@ updates and data quality checks"
 This agent uses explicit skill coordination:
 
 - **bigquery-etl-core**: Always loaded for conventions and patterns
-- **model-requirements**: First step to gather requirements
-- **query-writer**: Creates the query after requirements are clear
+- **query-writer**: Creates the query based on provided requirements
 - **metadata-manager**: Generates metadata after query is written
 - **sql-test-generator**: Creates tests after schema is finalized
 - **bigconfig-generator**: Adds monitoring after tests pass
 
 Each skill is invoked in sequence with proper error handling between steps.
+
+Note: The **model-requirements** skill should be used *before* invoking this agent if you need to gather requirements interactively. The orchestrator expects requirements to already be defined.
 
 ## Autonomy Level
 

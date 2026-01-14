@@ -11,18 +11,21 @@ Below are the currently available agents:
 | Property | Value |
 |----------|-------|
 | **Name** | `etl-orchestrator` |
-| **Purpose** | Builds complete BigQuery data models from requirements through testing and monitoring |
-| **Skills Used** | bigquery-etl-core, model-requirements, query-writer, metadata-manager, sql-test-generator, bigconfig-generator |
+| **Purpose** | Builds complete BigQuery data models from provided requirements through testing and monitoring |
+| **Skills Used** | bigquery-etl-core, query-writer, metadata-manager, sql-test-generator, bigconfig-generator |
 | **Autonomy Level** | High - makes implementation decisions autonomously |
 
 ### When to Use
 
-Use the ETL orchestrator when you need:
+Use the ETL orchestrator when you have **clear requirements** and need:
 
 - **Complete table implementation**: "Build a new table for user retention metrics"
 - **End-to-end workflows**: "Implement this data model with tests and monitoring"
 - **Complex multi-step tasks**: "Create a derived table that aggregates events by user"
 - **Production-ready deliverables**: Tasks requiring full documentation and testing
+
+!!! tip "Provide requirements upfront"
+    The orchestrator works best when you provide clear requirements in your request (source tables, logic, partitioning, etc.). If you're unsure what you need, use the `model-requirements` skill first to gather requirements interactively, then invoke the orchestrator.
 
 ### What It Does
 
@@ -37,7 +40,7 @@ graph TB
     E --> F[Phase 5: Validation]
     F --> G[Production-Ready Table]
 
-    B --> B1[Gather Requirements]
+    B --> B1[Validate Requirements]
     B --> B2[Create Plan]
 
     C --> C1[Write Query]
