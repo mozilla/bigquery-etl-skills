@@ -13,17 +13,20 @@
   "plugins": [
     {
       "name": "bigquery-etl-skills",
-      "description": "Specialized skills for Mozilla's BigQuery ETL repository workflows including query writing, testing, metadata management, and monitoring configuration",
+      "description": "Specialized agents and skills for Mozilla's BigQuery ETL repository workflows - including query writing, testing, metadata management, and monitoring configuration",
       "source": "./",
       "strict": false,
+      "agents": [
+        "./agents/etl-orchestrator.md"
+      ],
       "skills": [
-        "./bigquery-etl-core",
-        "./model-requirements",
-        "./query-writer",
-        "./metadata-manager",
-        "./sql-test-generator",
-        "./bigconfig-generator",
-        "./skill-creator"
+        "./skills/bigquery-etl-core",
+        "./skills/model-requirements",
+        "./skills/query-writer",
+        "./skills/metadata-manager",
+        "./skills/sql-test-generator",
+        "./skills/bigconfig-generator",
+        "./skills/skill-creator"
       ]
     }
   ]

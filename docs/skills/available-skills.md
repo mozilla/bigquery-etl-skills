@@ -1,6 +1,6 @@
 # Available Skills
 
-This plugin provides 7 specialized skills for BigQuery ETL workflows. Skills are automatically invoked by Claude based on your requests - you don't need to call them explicitly.
+This plugin provides specialized skills for BigQuery ETL workflows. Skills are automatically invoked by Claude based on your requests - you don't need to call them explicitly.
 
 ## Skill Categories
 
@@ -32,6 +32,15 @@ Skills are designed to be composable—they work together to complete complex wo
 
 ### Example: Creating a New Table
 
+```markdown
+Prompt: Create a new table from ad_metrics that tracks advertiser performance grouped by:
+
+- submission_date
+- advertiser
+- country
+- impressions
+```
+
 ```mermaid 
 graph LR
     A[User Request] --> B[model-requirements]
@@ -49,6 +58,10 @@ graph LR
 5. **bigconfig-generator** adds monitoring
 
 ### Example: Updating a Query
+
+```markdown
+Prompt: Update the logic in x table to filter out y
+```
 
 ```mermaid
 graph LR

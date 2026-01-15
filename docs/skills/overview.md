@@ -1,6 +1,6 @@
 # Skills Overview
 
-The BigQuery ETL Skills plugin includes 7 specialized skills that work together to accelerate your workflows.
+The BigQuery ETL Skills plugin includes specialized skills that work together to accelerate your workflows.
 
 ## Anatomy of a Skill
 
@@ -80,8 +80,6 @@ Detailed documentation broken into focused topics:
 ### `scripts/` (optional)
 
 Helper scripts for validation, generation, or analysis—used when bash operations are needed during skill execution.
-
-## Quick Links
 
 ## Quick Links
 
