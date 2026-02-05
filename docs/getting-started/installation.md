@@ -47,7 +47,7 @@ You should see all BigQuery ETL skills listed.
 Once installed:
 
 - Check out the [Quick Start](quick-start.md) guide for hands-on examples
-- Explore the [Skills Overview](../skills/overview.md) or [Agents Overview](http://127.0.0.1:8000/bigquery-etl-skills/agents/overview/) for detailed documentation
+- Explore the [Skills Overview](../skills/overview.md) or [Agents Overview](../agents/overview.md) for detailed documentation
 
 ## Troubleshooting
 

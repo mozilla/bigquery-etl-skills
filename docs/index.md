@@ -3,7 +3,7 @@
 A comprehensive Claude Code plugin that accelerates development workflows on Mozilla's [bigquery-etl](https://github.com/mozilla/bigquery-etl) repository using [Claude Code Skills](https://support.claude.com/en/articles/12512176-what-are-skills) and [specialized agents](https://code.claude.com/docs/en/sub-agents).
 
 !!! note "Designed for bigquery-etl"
-    Follow the [Installation](http://127.0.0.1:8000/bigquery-etl-skills/getting-started/installation/) guide to install the plugin and you're ready to go. The [Quickstart Guide](/getting-started/quick-start/) provides examples to get you started.
+    Follow the [Installation](/getting-started/installation.md) guide to install the plugin and you're ready to go. The [Quickstart Guide](/getting-started/quick-start.md) provides examples to get you started.
     
     This plugin works best when launched from your local development environment within the [bigquery-etl](https://github.com/mozilla/bigquery-etl) repository. 
 
