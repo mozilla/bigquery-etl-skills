@@ -89,9 +89,6 @@ graph TB
     B --> E[sql-test-generator Skill]
     B --> F[bigconfig-generator Skill]
     C --> G[Complete Data Model]
-    D --> G
-    E --> G
-    F --> G
 ```
 
 ### Reusability

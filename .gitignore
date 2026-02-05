@@ -19,3 +19,6 @@ ENV/
 
 # OS
 .DS_Store
+
+# Claude
+.claude
