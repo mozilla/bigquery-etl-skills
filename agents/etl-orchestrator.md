@@ -110,7 +110,17 @@ Check for these REQUIRED elements:
 
 **AFTER sql-test-generator completes:**
 1. Verify test directory was created
-2. Run tests: `pytest tests/sql/{project}/{dataset}/{table}/ -v`
+2. **Switch to the test project before running tests:**
+   ```bash
+   export GOOGLE_PROJECT_ID=bigquery-etl-integration-test
+   gcloud config set project $GOOGLE_PROJECT_ID
+   ```
+3. Run tests: `pytest tests/sql/{project}/{dataset}/{table}/ -v`
+4. **After tests complete (and you have corrected failures), switch back to the main project:**
+   ```bash
+   export GOOGLE_PROJECT_ID=mozdata
+   gcloud config set project $GOOGLE_PROJECT_ID
+   ```
 
 **IF tests fail:**
 - Read the failure message carefully
@@ -149,6 +159,14 @@ Check for these REQUIRED elements:
    - Nulls: Critical fields should not be null
 3. Verify `bigconfig.yml` was created
 
+**🚨 BIGCONFIG COMMAND RESTRICTION:**
+Only run these commands for bigconfig files — do NOT run anything else:
+- ✅ `./bqetl monitoring update <dataset>.<table>` — generates bigconfig.yml from metadata.yaml
+- ✅ `./bqetl monitoring validate <dataset>.<table>` — validates configuration
+- ❌ `./bqetl monitoring deploy` — do NOT run
+- ❌ `./bqetl monitoring run` — do NOT run
+- ❌ `./bqetl monitoring delete` — do NOT run
+
 ## Phase 6: Final Validation
 
 **Run these checks before reporting completion:**
@@ -164,9 +182,13 @@ Check for these REQUIRED elements:
    ./bqetl query validate sql/{project}/{dataset}/{table}/
    ```
 
-3. **Run tests one final time:**
+3. **Run tests one final time** (switch to test project first, then switch back):
    ```bash
+   export GOOGLE_PROJECT_ID=bigquery-etl-integration-test
+   gcloud config set project $GOOGLE_PROJECT_ID
    pytest tests/sql/{project}/{dataset}/{table}/ -v
+   export GOOGLE_PROJECT_ID=mozdata
+   gcloud config set project $GOOGLE_PROJECT_ID
    ```
 
 4. **Check formatting:**
