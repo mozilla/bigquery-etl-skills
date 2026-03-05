@@ -200,24 +200,53 @@ Only run these commands for bigconfig files — do NOT run anything else:
 
 ## Phase 7: Report Completion
 
-**Provide a summary to the user:**
+**Generate a summary file** at `sql/{project}/{dataset}/{table}/{table_name}-claude-summary.md` (use only the table name, no project or dataset prefix):
 
-```
-✓ Implementation complete
+```markdown
+# ETL Build Summary: {table_name}
 
-Created files:
+## Initial Request
+
+{paste the original user prompt verbatim}
+
+## Run Duration
+
+Started: {start time}
+Completed: {end time}
+Total: {duration}
+
+## Tasks Completed
+
+- Phase 1: {plan summary}
+- Phase 2: Query written and validated
+- Phase 3: schema.yaml and metadata.yaml generated
+- Phase 4: Tests created and passing
+- Phase 5: [Monitoring added | Monitoring skipped - {reason}]
+- Phase 6: Final validation passed
+
+## Files Created
+
 - sql/{project}/{dataset}/{table}/query.sql
 - sql/{project}/{dataset}/{table}/metadata.yaml
 - sql/{project}/{dataset}/{table}/schema.yaml
 - [sql/{project}/{dataset}/{table}/bigconfig.yml]
 - tests/sql/{project}/{dataset}/{table}/
 
-Configuration:
+## Errors Encountered
+
+{List any errors that occurred during the run and how they were resolved. If none, write "None."}
+
+## Configuration
+
 - DAG: {dag_name}
 - Schedule: {schedule}
 - Partitioning: {partition_type}
+```
 
-Tests: All passing
+**Then provide a brief summary to the user:**
+
+```
+Implementation complete. Summary written to sql/{project}/{dataset}/{table}/{table_name}-claude-summary.md
 
 Next steps:
 - Review the generated files
