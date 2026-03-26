@@ -17,7 +17,8 @@
       "source": "./",
       "strict": false,
       "agents": [
-        "./agents/etl-orchestrator.md"
+        "./agents/etl-orchestrator.md",
+        "./agents/schema-creation-agent.md"
       ],
       "skills": [
         "./skills/bigquery-etl-core",
@@ -26,7 +27,11 @@
         "./skills/metadata-manager",
         "./skills/sql-test-generator",
         "./skills/bigconfig-generator",
-        "./skills/skill-creator"
+        "./skills/skill-creator",
+        "./skills/column-description-finder",
+        "./skills/schema-enricher",
+        "./skills/schema-readme-generator",
+        "./skills/glean-description-lookup"
       ]
     }
   ]

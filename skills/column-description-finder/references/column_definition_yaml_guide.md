@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mozilla bigquery-etl uses two tiers of base schema YAML files to define standard column
+Mozilla bigquery-etl uses three tiers of base schema YAML files to define standard column
 descriptions that can be auto-applied to derived tables. These live in `bigquery_etl/schema/`.
 
 ## File Locations
@@ -10,9 +10,8 @@ descriptions that can be auto-applied to derived tables. These live in `bigquery
 ```
 bigquery_etl/schema/
 ├── global.yaml              # Common telemetry fields used across all datasets
-├── app_newtab.yaml          # Newtab application-specific fields (app_*.yaml pattern)
-├── ads_derived.yaml         # Ads dataset-specific fields
-├── <dataset_name>.yaml      # Other dataset-specific fields
+├── app_<name>.yaml          # Application-specific fields (app_*.yaml pattern)
+├── <dataset_name>.yaml      # Dataset-specific fields
 └── ...
 ```
 
@@ -78,17 +77,16 @@ fields:
 
 Contains fields that appear across many datasets and tables (submission_date, client_id, country, dau/wau/mau, normalized_channel, normalized_os, attribution_*, etc.).
 
-**READ this file at the start of every invocation** to get the current field list, descriptions, types, modes, and aliases.
+**READ this file — and the relevant app-specific and dataset-specific files — at the start of every invocation** to get the current field list, descriptions, types, modes, and aliases. App-specific schemas take priority over dataset schemas, which take priority over global.
 
 ### App-Specific Schemas (e.g., app_newtab.yaml)
 
 **Location in repo:** `bigquery_etl/schema/app_<name>.yaml`
 **Raw URL pattern:** `https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/app_<name>.yaml`
 
-Known app schema files (check `bigquery_etl/schema/` for the current list):
-- `app_newtab.yaml` — https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/app_newtab.yaml
+Check `bigquery_etl/schema/` for the current list of available app schemas.
 
-Contains fields specific to a product/application used across multiple datasets (e.g., newtab pocket/topsite/search interaction columns).
+Contains fields specific to a product/application used across multiple datasets.
 
 **READ the relevant app schema file** when working with tables from a known application. App schemas take priority over dataset schemas.
 
@@ -97,17 +95,15 @@ Contains fields specific to a product/application used across multiple datasets 
 **Location in repo:** `bigquery_etl/schema/<dataset_name>.yaml`
 **Raw URL pattern:** `https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/<dataset_name>.yaml`
 
-Known dataset schema files (check `bigquery_etl/schema/` for the current list):
-- `ads_derived.yaml` — https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/ads_derived.yaml
+Check `bigquery_etl/schema/` for the current list of available dataset schemas.
 
-Contains fields specific to one dataset (impressions, clicks, revenue, cpm, flight_id, campaign_id, partner_name, rate_type, etc.).
+Contains fields specific to one dataset.
 
 **READ the relevant dataset schema file** when the table's dataset has a matching `<dataset_name>.yaml`.
 
 ## How Alias Matching Works
 
-When running `./bqetl query schema update --use-global-schema`, bqetl matches columns
-by exact name first, then by aliases:
+The audit script matches columns by exact name first, then by aliases:
 
 ```yaml
 # In global.yaml
@@ -118,7 +114,7 @@ by exact name first, then by aliases:
 ```
 
 If your table has a column named `sub_date`, it matches `submission_date` via alias
-and inherits the description. bqetl will recommend renaming `sub_date` to `submission_date`.
+and the base schema description is applied. The audit output will note which alias was used.
 
 ## Priority Order
 
@@ -159,8 +155,14 @@ python scripts/find_column_description.py my_column --all-datasets
 # See which columns have base schema descriptions available
 python scripts/audit_base_schema_coverage.py telemetry_derived.clients_daily_v1
 
+# Include app-specific schema
+python scripts/audit_base_schema_coverage.py telemetry_derived.clients_daily_v1 --app-schema <app_name>
+
 # Include dataset-specific schema
 python scripts/audit_base_schema_coverage.py ads_derived.impressions_v1 --dataset-schema
+
+# Include both app-specific and dataset-specific schemas
+python scripts/audit_base_schema_coverage.py ads_derived.impressions_v1 --app-schema <app_name> --dataset-schema
 
 # Show only missing descriptions
 python scripts/audit_base_schema_coverage.py ads_derived.impressions_v1 --missing-only

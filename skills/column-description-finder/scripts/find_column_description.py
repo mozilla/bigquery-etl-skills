@@ -2,8 +2,8 @@
 """
 Find Column Description
 
-Searches global and application-specific column definition YAML files for a column's
-description, type, mode, and aliases.
+Searches global, app-specific (app_<name>.yaml), and dataset-specific column definition
+YAML files for a column's description, type, mode, and aliases.
 
 Usage:
     python scripts/find_column_description.py <column_name>
@@ -162,12 +162,12 @@ def main():
     )
     parser.add_argument(
         "--dataset",
-        help="Dataset-specific schema to search (e.g., ads_derived). Searches global.yaml + this file.",
+        help="Named base schema file to search (in addition to global.yaml), e.g., ads_derived or app_newtab.",
     )
     parser.add_argument(
         "--all-datasets",
         action="store_true",
-        help="Search global.yaml and all available dataset schemas",
+        help="Search all available schemas (app-specific first, then dataset-specific, then global)",
     )
     parser.add_argument(
         "--list-all",
@@ -190,7 +190,7 @@ def main():
     global_path = base_dir / "global.yaml"
 
     # Build list of schema files to search — priority: app-specific > dataset-specific > global
-    schema_files: List[Tuple[str, Path]] = []
+    schema_files: List[Tuple[str, Path, Dict]] = []
 
     if args.dataset:
         ds_path = base_dir / f"{args.dataset}.yaml"
@@ -234,7 +234,7 @@ def main():
     column_name = args.column
     found_any = False
 
-    # Search dataset-specific schema first, then global (priority order)
+    # Search in priority order (app-specific > dataset-specific > global, as built above)
     for source_name, _, schema_data in schema_files:
         match = find_column(column_name, schema_data)
         if match:
@@ -246,7 +246,7 @@ def main():
         print(f"\nColumn '{column_name}' not found in: {searched}")
         print("\nTips:")
         print("  - Check spelling and case (names are case-sensitive)")
-        print("  - Try --all-datasets to search all dataset schemas")
+        print("  - Try --all-datasets to search all schemas (app-specific, dataset-specific, and global)")
         print("  - Column may only exist in a table's schema.yaml, not in base schemas")
         available_app = find_available_app_schemas(base_dir)
         available_ds = find_available_dataset_schemas(base_dir)

@@ -3,10 +3,12 @@
 Audit Base Schema Coverage
 
 Analyzes a schema.yaml file and reports which columns have descriptions available
-in global.yaml and/or application-specific schema YAML files.
+in global.yaml, app-specific schema YAML files (app_<name>.yaml), and/or
+dataset-specific schema YAML files (<dataset_name>.yaml).
 
 Usage:
     python scripts/audit_base_schema_coverage.py <dataset>.<table>
+    python scripts/audit_base_schema_coverage.py <dataset>.<table> --app-schema <app_name>
     python scripts/audit_base_schema_coverage.py <dataset>.<table> --dataset-schema
     python scripts/audit_base_schema_coverage.py <dataset>.<table> --missing-only
     python scripts/audit_base_schema_coverage.py --list-schemas
@@ -15,8 +17,14 @@ Examples:
     # Check coverage from global.yaml only
     python scripts/audit_base_schema_coverage.py telemetry_derived.clients_daily_v1
 
-    # Check coverage from global + ads_derived.yaml
+    # Check coverage including an app-specific schema
+    python scripts/audit_base_schema_coverage.py telemetry_derived.clients_daily_v1 --app-schema <app_name>
+
+    # Check coverage including dataset-specific schema
     python scripts/audit_base_schema_coverage.py ads_derived.impressions_v1 --dataset-schema
+
+    # Check coverage including both app-specific and dataset-specific schemas
+    python scripts/audit_base_schema_coverage.py ads_derived.impressions_v1 --app-schema <app_name> --dataset-schema
 
     # Show only columns missing descriptions
     python scripts/audit_base_schema_coverage.py telemetry_derived.clients_daily_v1 --missing-only
@@ -28,7 +36,7 @@ Examples:
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 import yaml
 
 
@@ -206,11 +214,11 @@ def print_report(report: Dict, table_id: str, missing_only: bool = False):
             print(f"    - {f['name']}")
         print()
         print("  To add descriptions from base schemas:")
-        print("    ./bqetl query schema update <dataset>.<table> --use-global-schema")
+        print("    ./bqetl query schema update <dataset>.<table>")
         print("    # or also use dataset-specific:")
-        print("    ./bqetl query schema update <dataset>.<table> --use-dataset-schema --use-global-schema")
-        print("    # or also use app-specific (e.g., app_newtab):")
-        print("    ./bqetl query schema update <dataset>.<table> --use-app-schema app_newtab --use-global-schema")
+        print("    ./bqetl query schema update <dataset>.<table> --dataset-schema")
+        print("    # or also use app-specific:")
+        print("    ./bqetl query schema update <dataset>.<table> --app-schema <app_name>")
     else:
         print("  All fields have descriptions. No action needed.")
 

@@ -1,7 +1,8 @@
 # Format template for adding new column definitions to base schema YAML files.
 # For the actual current fields, READ the live source files:
-#   Global:      https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/global.yaml
-#   Ads-derived: https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/ads_derived.yaml
+#   Global:           https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/global.yaml
+#   App-specific:     https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/app_<name>.yaml
+#   Dataset-specific: https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/<dataset_name>.yaml
 
 fields:
   # --- Basic scalar field ---

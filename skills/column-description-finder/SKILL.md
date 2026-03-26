@@ -1,12 +1,12 @@
 ---
 name: column-description-finder
-description: Use this skill when looking up, auditing, or managing column descriptions from global and application-specific column definition YAML files (bigquery_etl/schema/global.yaml and bigquery_etl/schema/<dataset>.yaml). Use it to find a description for a specific column, list all columns in a base schema, audit which columns in a table's schema.yaml are covered by base schemas, or identify columns missing descriptions. Works with metadata-manager skill.
+description: Use this skill when looking up, auditing, or managing column descriptions from global, application-specific, and dataset-specific column definition YAML files (bigquery_etl/schema/global.yaml, bigquery_etl/schema/app_<name>.yaml, and bigquery_etl/schema/<dataset>.yaml). Use it to find a description for a specific column, list all columns in a base schema, audit which columns in a table's schema.yaml are covered by base schemas, or identify columns missing descriptions. Works with schema-enricher skill.
 ---
 
 # Column Description Finder
 
-**Composable:** Works with metadata-manager (for applying descriptions to schema.yaml files)
-**When to use:** Finding column descriptions, auditing base schema coverage, listing available columns in global/dataset schemas
+**Composable:** Works with schema-enricher (which invokes this skill in Step 0c for base schema audit)
+**When to use:** Finding column descriptions, auditing base schema coverage, listing available columns in global/app/dataset schemas
 
 ## Overview
 
@@ -29,12 +29,12 @@ This skill helps:
 
 1. **App-specific schema** (read first — highest priority):
    - `https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/app_<name>.yaml`
-   - Known files: `app_newtab.yaml`
+   - Check `bigquery_etl/schema/` for available app schema files (`app_*.yaml` pattern).
    - Use WebFetch to retrieve the file; if it returns 404, no app schema exists for that application.
 
 2. **Dataset-specific schema** (read second):
    - `https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/<dataset_name>.yaml`
-   - Known files: `ads_derived.yaml`
+   - Check `bigquery_etl/schema/` for available dataset schema files.
    - Use WebFetch to retrieve the file; if it returns 404, no dataset schema exists for that dataset.
 
 3. **Global schema** (read third — fallback):
@@ -50,10 +50,10 @@ This skill helps:
 # Search global.yaml for a column
 python scripts/find_column_description.py submission_date
 
-# Search global.yaml + app_newtab.yaml (app-specific, highest priority)
+# Search global.yaml + app_newtab.yaml (named file + global)
 python scripts/find_column_description.py pocket_clicks --dataset app_newtab
 
-# Search global.yaml + ads_derived.yaml (dataset-specific)
+# Search global.yaml + ads_derived.yaml (named file + global)
 python scripts/find_column_description.py clicks --dataset ads_derived
 
 # Search all available base schemas (app-specific first, then dataset-specific, then global)
@@ -97,9 +97,10 @@ python scripts/audit_base_schema_coverage.py ads_derived.impressions_v1 --missin
 
 **Output shows:**
 - Columns covered by base schemas (and which file)
-- Columns with their own descriptions (not in base schemas)
+- Columns with custom descriptions (defined in schema.yaml but not in any base schema)
 - Columns with no description at all
-- bqetl commands to apply base schema descriptions
+
+> **Note:** Only top-level columns are matched against base schemas. Nested RECORD fields are not included in coverage analysis.
 
 ## Common Workflows
 
@@ -117,8 +118,10 @@ When a user asks "what does the `country` column mean?" or "what is `dau`?":
 When creating schema.yaml for a new derived table:
 
 1. Run `audit_base_schema_coverage.py <dataset>.<table>` after initial schema generation
+   - Add `--app-schema <app_name>` if the table belongs to an app (or set `app_schema` in `metadata.yaml`)
+   - Add `--dataset-schema` if the dataset has a matching `<dataset_name>.yaml`
 2. Review which columns are covered by base schemas
-3. Recommend running `./bqetl query schema update --use-global-schema` for covered columns
+3. Apply base schema descriptions directly from the audit output
 4. For uncovered columns, generate descriptions manually
 
 ### Workflow 3: Identify Missing Descriptions
@@ -134,7 +137,7 @@ When checking metadata completeness for a table:
 
 When a column is used in multiple derived tables and needs a standard description:
 
-1. Determine if it belongs in global.yaml (used everywhere) or a dataset-specific yaml
+1. Determine if it belongs in global.yaml (used everywhere), an app-specific yaml (app_<name>.yaml, cross-dataset for a specific app), or a dataset-specific yaml (<dataset>.yaml)
 2. READ `assets/example_global_entries.yaml` to see the correct format
 3. Add the entry with name, type, mode, description, and aliases
 4. Verify description quality using the checklist in `references/column_definition_yaml_guide.md`
@@ -149,8 +152,8 @@ Searches base schemas for a column by name or alias.
 Usage: python scripts/find_column_description.py <column_name> [options]
 
 Options:
-  --dataset DATASET      Also search this dataset-specific schema
-  --all-datasets         Search all available dataset schemas
+  --dataset DATASET      Named base schema file to search (in addition to global.yaml), e.g., ads_derived or app_newtab
+  --all-datasets         Search all available schemas (app-specific first, then dataset-specific, then global)
   --list-all             List all columns in the selected schema(s)
   --base-schemas-dir     Path to bigquery_etl/schema/ (default: bigquery_etl/schema)
 ```
@@ -171,25 +174,12 @@ Options:
   --base-schemas-dir       Path to bigquery_etl/schema/ (default: bigquery_etl/schema)
 ```
 
-## Integration with metadata-manager
-
-This skill and metadata-manager work together for schema management:
-
-1. **column-description-finder** identifies what descriptions are available in base schemas
-2. **metadata-manager** uses `./bqetl query schema update --use-global-schema` to apply them
-
-**Typical handoff:**
-```
-column-description-finder: "Columns submission_date and client_id are in global.yaml"
-metadata-manager: runs ./bqetl query schema update --use-global-schema
-```
-
 ## Key Files
 
 | File | Purpose |
 |------|---------|
 | https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/global.yaml | Live global schema — READ on every invocation |
-| `https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/app_newtab.yaml` | Live app-specific schema for newtab — READ when working with newtab tables |
+| `https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/app_<name>.yaml` | Live app-specific schema — READ when an app schema applies; 404 means none exists |
 | `https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/<dataset>.yaml` | Live dataset schema — READ when dataset has a matching file |
 | `references/column_definition_yaml_guide.md` | YAML structure, alias matching, priority order, conventions |
 | `assets/example_global_entries.yaml` | Format-only template for adding new column definitions |
