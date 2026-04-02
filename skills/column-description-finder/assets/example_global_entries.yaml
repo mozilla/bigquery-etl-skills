@@ -1,0 +1,36 @@
+# Format template for adding new column definitions to base schema YAML files.
+# For the actual current fields, READ the live source files:
+#   Global:           https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/global.yaml
+#   App-specific:     https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/app_<name>.yaml
+#   Dataset-specific: https://raw.githubusercontent.com/mozilla/bigquery-etl/main/bigquery_etl/schema/<dataset_name>.yaml
+
+fields:
+  # --- Basic scalar field ---
+  - name: example_field
+    type: DATE
+    mode: NULLABLE
+    description: "Clear description of what this field represents."
+
+  # --- Field with aliases (alternative column names that map to this canonical name) ---
+  - name: canonical_name
+    type: STRING
+    mode: NULLABLE
+    description: "Description of the field."
+    aliases:
+      - alternate_name_1
+      - alternate_name_2
+
+  # --- RECORD (nested) field ---
+  - name: nested_field
+    type: RECORD
+    mode: REPEATED
+    description: "Description of the nested structure."
+    fields:
+      - name: key
+        type: STRING
+        mode: NULLABLE
+        description: "Description of the nested key."
+      - name: value
+        type: STRING
+        mode: NULLABLE
+        description: "Description of the nested value."
