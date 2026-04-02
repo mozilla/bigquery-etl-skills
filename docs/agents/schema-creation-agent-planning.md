@@ -5,7 +5,7 @@
 **Project:** Metadata Completeness Project<br>
 **Status:** Draft<br>
 **Author:** Gaurang Katre<br>
-**Last updated:** 2026-03-24<br>
+**Last updated:** 2026-04-01<br>
 
 ---
 
@@ -15,10 +15,10 @@ The **Schema Creation Agent** is a two-phase autonomous agent in the `bigquery-e
 
 The agent is powered by the `claude-opus-4-6` model and orchestrates two specialist skills:
 
-| Skill | Phase | Role |
-|---|---|---|
-| `schema-enricher` | Phase 1 | Creates or enriches `schema.yaml` |
-| `schema-readme-generator` | Phase 2 | Creates or updates `README.md` |
+| Skill | Phase | Role                                |
+|---|---|-------------------------------------|
+| `schema-enricher` | Phase 1 | Creates or enriches `schema.yaml`<br>Uses the sub-skill `column-description-finder` to search the base metadata schema for the description |
+| `schema-readme-generator` | Phase 2 | Creates or updates `README.md`      |
 
 ---
 
@@ -46,7 +46,7 @@ Filling these manually requires engineers to cross-reference multiple files (`qu
 ### Non-Goals
 
 - Does not modify query logic (`query.sql` / `query.py`)
-- Does not create or update `metadata.yaml` but expects it to be available
+- Does not create or update `metadata.yaml` — expects it to be present and complete before invocation
 - Does not maintain base metadata YAML files (global.yaml, app_<product>.yaml, <dataset>.yaml)
 - Does not push changes to GitHub or open pull requests (in this iteration)
 - Does not look up glean dictionary for missing descriptions (in this iteration)
@@ -208,7 +208,7 @@ After both phases, the agent reports:
 
 | Phase | Result |
 |---|---|
-| Schema Enrichment | Fields enriched, inferences, validation result |
+| Schema Enrichment | Fields enriched, descriptions filled per tier, validation result |
 | README | Created / updated / skipped with reason |
 
 Lists all output files written.
@@ -224,14 +224,146 @@ When filling a missing column description, the agent applies this strict priorit
 | 1 (highest) | `app_<name>.yaml` (product-specific base schema) | Column matches a field in the app schema |
 | 2 | `<dataset_name>.yaml` (dataset-specific base schema) | Column matches a field in the dataset schema |
 | 3 | `global.yaml` (cross-product canonical) | Column matches a globally defined field |
-| 4 | Query context | No base schema match; description derived from what the column computes in `query.sql` |
-| 5 (lowest) | Application context | No base schema match and query context is unclear; derived from column name semantics, product domain, and related columns |
+| 4 | Upstream source `schema.yaml` | No base schema match; column is a pass-through dimension — copy description from source table's `schema.yaml` |
+| 5 | Query context | No base schema match; description derived from what the column computes in `query.sql` |
+| 6 (lowest) | Application context | No base schema match and query context is unclear; derived from column name semantics, product domain, and related columns |
 
-Descriptions from priorities 4 and 5 are captured in `_missing_metadata.yaml` for future promotion to base schemas.
+Descriptions from priorities 4, 5, and 6 are captured in `_missing_metadata.yaml` for future promotion to base schemas.
 
 ---
 
-## 10. Error Handling
+## 10. How Base Schema and Query Context Work
+
+### Base Schema — Three-Tier Hierarchy
+
+Base schemas are shared YAML files defining canonical column descriptions for reuse across many tables. The `column-description-finder` skill fetches these live from GitHub on every run.
+
+| Tier | File | Scope | Example                                                                              |
+|---|---|---|--------------------------------------------------------------------------------------|
+| 1 (highest) | `app_<name>.yaml` | Columns specific to one product (newtab, ads) | `app_newtab.yaml` defines fields like `pocket_enabled`                               |
+| 2 | `<dataset_name>.yaml` | Columns specific to one dataset | `firefox_desktop_derived.yaml` defines fields shared across firefox_desktop_derived tables |
+| 3 (lowest) | `global.yaml` | Columns shared across many products and datasets | `submission_date`, `country_code`, `channel`, `os`                                   |
+
+**How matching works:** For each column in `schema.yaml`, the audit script checks tiers in order (app → dataset → global) using exact name and alias matching. The first tier that matches wins.
+
+> **Example:** The column `submission_date` is defined in `global.yaml` — every table with this column receives its description automatically.
+
+### Priority 4 — Upstream Source `schema.yaml`
+
+When a column has no base schema match and appears to be a pass-through dimension from a source table, the agent locates that table's `schema.yaml` under `sql/` and copies the description directly.
+
+**How it works:**
+1. Parse the FROM clause of `query.sql` to identify source table(s)
+2. Locate the source table directory under `sql/<project>/<dataset>/<table>/` and read its `schema.yaml`
+3. If the column exists and has a description, copy it directly
+4. If the upstream `schema.yaml` is absent or the column has no description there, fall through to priority 5
+
+> **Note:** Descriptions copied from an upstream `schema.yaml` are still captured in `_missing_metadata.yaml` because they are not from a base schema file.
+
+### Priority 5 — Query Context
+
+When neither base schemas nor upstream `schema.yaml` provide a description, the agent examines the SQL expression in `query.sql`:
+
+| SQL expression | Derived description |
+|---|---|
+| `SUM(click_count)` | Total number of clicks recorded |
+| `COUNT(DISTINCT client_id)` | Number of unique clients with at least one interaction |
+| `SAFE_DIVIDE(clicks, impressions)` | Click-through rate calculated as clicks divided by impressions |
+| `MAX(experiment_branch)` | The experiment branch associated with this client |
+| `COALESCE(pocket_enabled, FALSE)` | Whether the Pocket feature is enabled; defaults to FALSE when not set |
+
+### Priority 6 — Application Context (Last Resort)
+
+If the SQL expression alone does not reveal the column's meaning, the agent derives a description from column name semantics, the product domain (newtab, search, ads), and nearby related columns.
+
+> **All priorities 4–6:** descriptions are always written to `_missing_metadata.yaml` with a recommended target file for future promotion to base schemas.
+
+---
+
+## 11. Developer Guide — Using the Agent
+
+### Installation
+
+The agent and its skills are distributed as a Claude Code plugin. Install once per machine:
+
+```bash
+# Install the bigquery-etl-skills plugin
+claude plugin install bigquery-etl-skills
+```
+
+This registers the following components with Claude Code:
+
+| Component | Type | Installed as |
+|---|---|---|
+| `schema-creation-agent` | Agent | `/agents/schema-creation-agent.md` |
+| `schema-enricher` | Skill | `/skills/schema-enricher/SKILL.md` |
+| `schema-readme-generator` | Skill | `/skills/schema-readme-generator/SKILL.md` |
+| `column-description-finder` | Skill | `/skills/column-description-finder/SKILL.md` |
+
+After installation, verify the agent and skills are registered:
+
+```bash
+ls ~/.claude/plugins/cache/bigquery-etl-skills/bigquery-etl-skills/*/agents/
+ls ~/.claude/plugins/cache/bigquery-etl-skills/bigquery-etl-skills/*/skills/
+```
+
+Expected output includes `schema-creation-agent.md` in agents and `schema-enricher`, `schema-readme-generator`, `column-description-finder` in skills.
+
+### Prerequisites
+
+| Prerequisite | Required? | Notes |
+|---|---|---|
+| `bigquery-etl-skills` plugin installed | Yes | Provides the agent and all dependent skills |
+| bigquery-etl repo cloned locally | Yes | Agent reads `query.sql`, `metadata.yaml`, `schema.yaml` from disk |
+| bqetl CLI installed and authenticated | Yes | Used to generate and validate `schema.yaml` |
+| `query.sql` or `query.py` present | Yes | At minimum `query.py`; `query.sql` preferred for full functionality |
+| `metadata.yaml` complete | Recommended | Must be present and complete before invoking the agent |
+| `schema.yaml` present | Optional | Agent generates it automatically if missing |
+
+### Step-by-Step: Invoking the Agent
+
+1. **Identify the target table.** Fully qualified format: `<project>.<dataset>.<table_version>`. Example:
+   `moz-fx-data-shared-prod.telemetry_derived.newtab_daily_interactions_aggregates_v1`
+
+2. **Verify prerequisites.** Confirm `query.sql` (or `query.py`) and `metadata.yaml` exist and are complete before proceeding.
+
+3. **Invoke the agent:**
+   `Run schema-creation-agent for telemetry_derived.newtab_daily_interactions_aggregates_v1`
+
+4. **Monitor Phase 1.** The agent audits base schema coverage, fills descriptions using the 6-tier priority order, validates columns, writes and verifies `schema.yaml`, then writes the summary report.
+
+5. **Review Phase 1 outputs.** Check: fields enriched per tier, whether `_missing_metadata.yaml` was created, BigQuery validation result.
+
+6. **Monitor Phase 2.** The agent reads the enriched `schema.yaml`, `query.sql`, and `metadata.yaml` to generate `README.md`.
+
+7. **Review README.md.** Verify all 8 sections are present, the Mermaid diagram is correct, and 3 example queries use representative fields.
+
+8. **Commit the output files.**
+
+### Output Files
+
+| File | Always created? | Description |
+|---|---|---|
+| `sql/<project>/<dataset>/<table>/schema.yaml` | Yes | Enriched with complete column descriptions |
+| `sql/<project>/<dataset>/<table>/README.md` | Yes (if Phase 2 succeeds) | Rich-style documentation with Mermaid data flow and example queries |
+| `bigquery_etl/schema/missing_metadata/<table>-metadata-summary.md` | Yes | Phase-by-phase run summary |
+| `bigquery_etl/schema/missing_metadata/<table>_missing_metadata.yaml` | Only if priorities 4–6 were used | Non-base-schema descriptions with recommended promotion targets |
+
+### Handling Common Situations
+
+| Situation | Action |
+|---|---|
+| `metadata.yaml` is missing or incomplete | Ensure `metadata.yaml` is present and complete before invoking the agent |
+| Only `query.py` exists (no `query.sql`) | Invoke as normal — column validation and some README sections skipped and noted in outputs |
+| `schema.yaml` does not exist | Auto-generated via `./bqetl query schema update` — no manual action needed |
+| Phase 1 fails | Agent stops and reports the error. Resolve the issue before re-invoking |
+| Phase 2 fails | `schema.yaml` is already written. Re-invoke `schema-readme-generator` directly without re-running Phase 1 |
+| BigQuery validation fails | Agent reports which fields failed. Correct discrepancies and re-run validation manually |
+| `_missing_metadata.yaml` was created | Review and consider opening a PR to promote entries to the recommended base schema file |
+
+---
+
+## 12. Error Handling
 
 | Error | Handling |
 |---|---|
@@ -245,17 +377,17 @@ Descriptions from priorities 4 and 5 are captured in `_missing_metadata.yaml` fo
 
 ---
 
-## 11. Integration with Skills
+## 13. Integration with Skills
 
 | Component | Relationship |
 |---|---|
 | `schema-enricher` | Phase 1 skill — full schema enrichment workflow |
+| `column-description-finder` | Sub-skill invoked by `schema-enricher` in Step 0c — audits base schema coverage by fetching live files from GitHub |
 | `schema-readme-generator` | Phase 2 skill — README generation workflow |
-| `etl-orchestrator` | Broader 7-phase ETL agent that may invoke `schema-creation-agent` as part of a larger pipeline |
 
 ---
 
-## 12. Key Design Decisions
+## 14. Key Design Decisions
 
 **D1 — Two-phase blocking architecture**
 Phase 1 (schema enrichment) must complete before Phase 2 (README generation) begins. The README's Notes & Conventions section depends on fully enriched `schema.yaml` descriptions. A failed Phase 1 makes a high-quality README impossible.
@@ -270,11 +402,11 @@ Schema enrichment requires reading and synthesising multiple files (query SQL, t
 Base schema files are fetched live from GitHub (not read inline) to avoid stale local copies and to reduce hallucination risk in column matching. This is mandatory — the audit script uses deterministic matching.
 
 **D5 — Non-base-schema descriptions are captured, not silently applied**
-Descriptions derived from query context or application context are written to `_missing_metadata.yaml` with recommended promotion targets. This creates an auditable record and enables gradual expansion of the base schema coverage, reducing the need for inference over time.
+Descriptions derived from upstream source schema.yaml, query context, or application context are written to `_missing_metadata.yaml` with recommended promotion targets. This creates an auditable record and enables gradual expansion of the base schema coverage, reducing the need for inference over time.
 
 ---
 
-## 13. File Conventions
+## 15. File Conventions
 
 ### Directory layout (per table)
 
@@ -305,7 +437,7 @@ bigquery_etl/schema/missing_metadata/
 
 ---
 
-## 14. Open Questions & Future Work
+## 16. Open Questions & Future Work
 
 | # | Question / Item | Notes                                                                                                 |
 |---|---|-------------------------------------------------------------------------------------------------------|
@@ -318,7 +450,7 @@ bigquery_etl/schema/missing_metadata/
 
 ---
 
-## 15. General Feedback
+## 17. General Feedback
 
 | Name       | Emoji | Comments      |
 |------------|-------|---------------|
@@ -327,8 +459,9 @@ bigquery_etl/schema/missing_metadata/
 
 ---
 
-## 16. Revision History
+## 18. Revision History
 
-| Version | Date       | Author        | Changes   |
-|---------|------------|---------------|-----------|
-| 0.1 | 2026-03-24 | Gaurang Katre | Initial draft |
+| Version | Date       | Author        | Changes                                                                                                                                                                                                   |
+|---------|------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1 | 2026-03-24 | Gaurang Katre | Initial draft                                                                                                                                                                                             |
+| 0.2 | 2026-04-01 | Gaurang Katre | Added sections 10 and 11 (How Base Schema and Query Context Work; Developer Guide)<br>Promoted upstream source schema.yaml to Priority 4 and renumbered query context to P5 and application context to P6 |

@@ -82,7 +82,8 @@ Common canonical names:
 
 ## Priority Order for Description Sources
 
-The 3-tier base schema priority order (app-specific → dataset-specific → global) is defined in `column-description-finder/references/column_definition_yaml_guide.md`. Schema-enricher adds two further tiers:
+The 3-tier base schema priority order (app-specific → dataset-specific → global) is defined in `column-description-finder/references/column_definition_yaml_guide.md`. Schema-enricher adds three further tiers:
 
-4. **Query context** — derive from what the column computes in `query.sql` (aggregation, flag, dimension)
-5. **Application context** — infer from column name semantics and product domain (last resort — document in result file)
+4. **Upstream source schema.yaml** — for pass-through dimension columns, copy description from the source table's `schema.yaml` (locate via FROM clause in `query.sql`)
+5. **Query context** — derive from what the column computes in `query.sql` (aggregation, flag, rate)
+6. **Application context** — infer from column name semantics and product domain (last resort — document in result file)

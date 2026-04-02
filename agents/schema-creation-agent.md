@@ -1,6 +1,6 @@
 ---
 name: schema-creation-agent
-description: Enriches schema.yaml files for BigQuery tables in the bigquery-etl repository. Creates schema.yaml when absent, fills missing column descriptions from base schemas or infers from application context, validates columns against query output, creates or updates README.md, and generates summary reports. Use when you need to create or improve schema documentation for a BigQuery table.
+description: Enriches schema.yaml files for BigQuery tables in the bigquery-etl repository. Creates schema.yaml when absent, fills missing column descriptions using a 6-tier priority order (base schemas, upstream source schema.yaml, query context, application context), validates columns against query output, creates or updates README.md, and generates summary reports. Use when you need to create or improve schema documentation for a BigQuery table.
 skills: schema-enricher, schema-readme-generator
 model: opus
 ---
@@ -15,11 +15,11 @@ You are a workflow agent that enriches `schema.yaml` files for BigQuery tables i
 |---|---|---|
 | Create schema.yaml | `schema-enricher` | Generates structure via `./bqetl query schema update` when no schema exists |
 | Fill descriptions | `schema-enricher` | Looks up column descriptions from base schemas in strict priority order |
-| Infer descriptions | `schema-enricher` | Derives descriptions from application/product context when no base schema match exists |
+| Fill non-base-schema descriptions | `schema-enricher` | Derives descriptions from upstream source schema.yaml, query context, or application context when no base schema match exists (priorities 4–6) |
 | Validate columns | `schema-enricher` | Compares schema columns against query SELECT output; adds missing, flags extras, corrects types |
 | Quality check | `schema-enricher` | Verifies every description is non-empty, contextually accurate, and type-consistent |
 | Generate summary | `schema-enricher` | Writes a `{table_name}-metadata-summary.md` report per table |
-| Missing metadata file | `schema-enricher` | Writes a `{table_name}_missing_metadata.yaml` for all inferred descriptions not found in any base schema |
+| Missing metadata file | `schema-enricher` | Writes a `{table_name}_missing_metadata.yaml` for all non-base-schema descriptions (priorities 4–6) |
 | Create/update README | `schema-readme-generator` | Creates or updates `README.md` |
 
 ---
@@ -51,7 +51,7 @@ After both phases finish, report:
 
 | Phase | Result |
 |---|---|
-| Schema Enrichment | outcome from `schema-enricher` (fields enriched, inferences, validation result) |
+| Schema Enrichment | outcome from `schema-enricher` (fields enriched, descriptions filled per tier, validation result) |
 | README | created/updated/skipped with reason |
 
 List all output files written.
@@ -71,7 +71,8 @@ List all output files written.
 
 | Skill | Role |
 |---|---|
-| `schema-enricher` | Invoked in Phase 1 — handles full schema enrichment: discovery, description lookup, inference, quality check, column validation, write, verify, and summary |
+| `schema-enricher` | Invoked in Phase 1 — handles full schema enrichment: discovery, description lookup, quality check, column validation, write, verify, and summary |
+| `column-description-finder` | Sub-skill invoked by `schema-enricher` in Step 0c — audits base schema coverage by fetching live files from GitHub |
 | `schema-readme-generator` | Invoked in Phase 2 — creates or updates `README.md` using enriched schema.yaml, query.sql, and metadata.yaml |
 
 ---
@@ -83,7 +84,7 @@ List all output files written.
 
 | Phase | Result |
 |---|---|
-| Schema Enrichment | schema-enricher complete: 51 fields enriched, 0 inferences, schema validation passed, summary written |
+| Schema Enrichment | schema-enricher complete: 51 fields enriched (51 from base schemas, 0 non-base-schema), schema validation passed, summary written |
 | README | README.md created via schema-readme-generator (168 lines) |
 
 **Output files:**

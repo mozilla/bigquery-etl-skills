@@ -1,6 +1,6 @@
 ---
 name: schema-enricher
-description: Use this skill to enrich schema.yaml files for BigQuery tables in the bigquery-etl repository. Handles creating schema.yaml when it doesn't exist, finding and filling missing column descriptions (from base schemas, query context, or application context), validating columns against the query, and generating a summary with recommendations for where to add new descriptions (global.yaml, <dataset_name>.yaml, or app_<name>.yaml). Works with column-description-finder skill.
+description: Use this skill to enrich schema.yaml files for BigQuery tables in the bigquery-etl repository. Handles creating schema.yaml when it doesn't exist, finding and filling missing column descriptions (from base schemas, upstream source schema, query context, or application context), validating columns against the query, and generating a summary with recommendations for where to add new descriptions (global.yaml, <dataset_name>.yaml, or app_<name>.yaml). Works with column-description-finder skill.
 ---
 
 # Schema Enricher
@@ -19,7 +19,7 @@ description: Use this skill to enrich schema.yaml files for BigQuery tables in t
    - Canonical field names and how aliases work
 
 3. **Result file format:** READ `assets/missing_descriptions_template.yaml`
-   - Template for capturing columns whose descriptions were derived from query context or inferred from application context (i.e., not found in a base schema)
+   - Template for capturing columns whose descriptions were derived from upstream source schema, query context, or application context (i.e., not found in a base schema)
    - Used to recommend additions to base schema files
 
 ## Workflow
@@ -86,23 +86,29 @@ Proceed to Step 2 for all columns with no description in any base schema (live o
 
 For each column without a current description in schema.yaml, use this priority order:
 
-1. **Base schemas** — descriptions are already identified in the Step 0c audit output. Apply them directly from the audit results.
+1–3. **Base schemas** — descriptions are already identified in the Step 0c audit output. Apply them directly from the audit results (app-specific → dataset-specific → global).
 
-2. **Query context** — examine `query.sql` to understand what the column computes:
+4. **Upstream source schema.yaml** — for columns that are pass-through dimensions from a source table:
+   - Identify the source table(s) from the FROM clause of `query.sql`
+   - Locate the source table's directory under `sql/` and read its `schema.yaml`
+   - If the column exists and has a description, copy it directly
+   - If the upstream `schema.yaml` is absent or the column has no description there, fall through to priority 5
+
+5. **Query context** — examine `query.sql` to understand what the column computes:
    - Aggregation of clicks → "Total number of clicks recorded"
    - Boolean flag → "Whether [feature] is enabled for this user"
-   - Dimension from source → copy description from source schema.yaml if available
+   - SAFE_DIVIDE expression → rate or ratio description
 
-3. **Application context** — if no query context is clear, derive description from:
+6. **Application context** — if no query context is clear, derive description from:
    - Column name semantics
    - Dataset/product area (e.g., newtab, pocket, topsites, search)
    - Related columns nearby in the schema
 
-**⚠️ For any column whose description came from query context (item 2) or application context (item 3) — i.e., not from a base schema — capture it in `<table_name>_missing_metadata.yaml` (Step 6).**
+**⚠️ For any column whose description came from upstream source schema.yaml (priority 4), query context (priority 5), or application context (priority 6) — i.e., not from a base schema — capture it in `<table_name>_missing_metadata.yaml` (Step 6).**
 
 #### Nested RECORD fields
 
-Base schema matching covers top-level fields only (as noted in the Step 0c audit output). For nested fields within RECORD types, apply the same priority order as above — query context first, then application context. Descriptions derived from query context or application context for nested fields should also be captured in `<table_name>_missing_metadata.yaml`. Quality check (Step 4) applies to nested field descriptions as well.
+Base schema matching covers top-level fields only (as noted in the Step 0c audit output). For nested fields within RECORD types, apply the same priority order as above — upstream source schema.yaml first, then query context, then application context. Descriptions derived from priorities 4, 5, or 6 for nested fields should also be captured in `<table_name>_missing_metadata.yaml`. Quality check (Step 4) applies to nested field descriptions as well.
 
 ### Step 3: Validate columns
 
@@ -121,7 +127,7 @@ Review the diff to identify:
 
 ### Step 4: Description quality check
 
-Every description — whether sourced from a base schema, retained from the existing schema.yaml, or inferred from context — is verified against:
+Every description — whether sourced from a base schema, retained from the existing schema.yaml, or derived from context — is verified against:
 
 - [ ] Not empty or null
 - [ ] Not a restatement of the column name
@@ -153,7 +159,7 @@ On verification or validation failure: report which fields are missing/incorrect
 ### Step 6: Write `<table_name>_missing_metadata.yaml` (if non-live-base-schema descriptions were needed)
 
 **Create this file if ANY of the following is true:**
-- One or more columns required description from query context or application context (Step 2)
+- One or more columns required description from upstream source schema.yaml, query context, or application context (Step 2)
 - One or more columns were matched from a **local-only** base schema file (Step 1)
 
 Write to:
@@ -167,15 +173,15 @@ Structure — READ `assets/missing_descriptions_template.yaml` and COPY its form
 table: "<project>.<dataset>.<table>"
 generated_date: "<YYYY-MM-DD>"
 
-# Section 1: Columns whose descriptions came from query context or application context
+# Section 1: Columns whose descriptions came from upstream source schema, query context, or application context
 # (not found in any base schema — live or local)
 missing_columns:
   - name: "<column_name>"
     type: "<BigQuery type>"
     mode: "<NULLABLE|REQUIRED|REPEATED>"
     inferred_description: >-
-      <Description derived from query context or application/product context.>
-    inference_basis: "<column name semantics | related column | product domain | data type signal | query context>"
+      <Description derived from upstream source schema, query context, or application/product context.>
+    inference_basis: "<column name semantics | related column | product domain | data type signal | query context | upstream source schema>"
     recommended_target: "<global.yaml | app_<name>.yaml | <dataset_name>.yaml>"
     recommendation_reason: >-
       <Why this column belongs in the recommended target.>
@@ -230,7 +236,7 @@ Use the Write tool to create this file with the following structure:
 |---|---|---|
 | Discovery (Step 0) | ✅/❌ | Base schemas found |
 | Categorization (Step 1) | ✅/❌ | X covered, Y retained, Z flagged |
-| Description Fill (Step 2) | ✅/❌ | X from base schemas, Y from query/application context |
+| Description Fill (Step 2) | ✅/❌ | X from base schemas, Y from upstream schema/query/application context |
 | Column Validation (Step 3) | ✅/❌/⏭️ | X/Y match query output (or: skipped — only query.py exists) |
 | Quality Check (Step 4) | ✅/❌ | X descriptions pass |
 | Write (Step 5) | ✅/❌ | schema.yaml written |
@@ -245,7 +251,7 @@ Use the Write tool to create this file with the following structure:
 | <column_name> | <matched_field> | <source_file> | live | no |
 | <column_name> | <canonical_name> | <source_file> | live | yes (alias: <column_name>) |
 | <column_name> | <matched_field> | <source_file> | local-only | no |
-| <column_name> | — | (none) | inferred | — |
+| <column_name> | — | (none) | non-base-schema | — |
 
 ---
 
@@ -263,9 +269,9 @@ Use the Write tool to create this file with the following structure:
 
 | Column | Description | Inference Basis | Recommended Base Schema |
 |---|---|---|---|
-| <column_name> | <description> | <query context \| application context> | <global.yaml \| app_<name>.yaml \| <dataset_name>.yaml> |
+| <column_name> | <description> | <upstream source schema \| query context \| application context> | <global.yaml \| app_<name>.yaml \| <dataset_name>.yaml> |
 
-*(Omit this section if no columns required inference)*
+*(Omit this section if no non-base-schema descriptions were needed)*
 
 ---
 
@@ -282,7 +288,7 @@ _(If Step 3 was skipped because only query.py exists, write: "Column validation 
 ## Output Files
 
 - `sql/<project>/<dataset>/<table>/schema.yaml` — enriched with all X descriptions
-- `bigquery_etl/schema/missing_metadata/<table_name>_missing_metadata.yaml` — Y inferred descriptions + Z local-only base schema columns
+- `bigquery_etl/schema/missing_metadata/<table_name>_missing_metadata.yaml` — Y non-base-schema descriptions (priorities 4–6) + Z local-only base schema columns
   (or: `<table_name>_missing_metadata.yaml` not created — all columns matched in live base schemas)
 - `bigquery_etl/schema/missing_metadata/<table_name>-metadata-summary.md` — this summary file
 ```
@@ -293,7 +299,7 @@ Before reporting done, confirm all required output files have been written using
 
 - [ ] `sql/<project>/<dataset>/<table>/schema.yaml` — every field has a non-empty description
 - [ ] `bigquery_etl/schema/missing_metadata/<table_name>-metadata-summary.md` — summary markdown written
-- [ ] `bigquery_etl/schema/missing_metadata/<table_name>_missing_metadata.yaml` — written if any columns required inference OR came from local-only base schemas; explicitly noted as not created if all columns matched in live base schemas
+- [ ] `bigquery_etl/schema/missing_metadata/<table_name>_missing_metadata.yaml` — written if any columns required description from priorities 4, 5, or 6 OR came from local-only base schemas; explicitly noted as not created if all columns matched in live base schemas
 
 If any file is missing, create it before proceeding.
 

@@ -1,11 +1,11 @@
 ---
 name: schema-readme-generator
-description: Use this skill to create or update README.md files for BigQuery ETL tables in the mozilla bigquery-etl repository. Follows layout conventions derived from comparing README files across the repo — rich style with emoji headings, Mermaid data flow diagram, graduated example queries, and concise metadata overview table. Requires schema.yaml with complete descriptions (run schema-enricher first if needed) and metadata.yaml (run metadata-manager first if incomplete).
+description: Use this skill to create or update README.md files for BigQuery ETL tables in the mozilla bigquery-etl repository. Follows layout conventions derived from comparing README files across the repo — rich style with emoji headings, Mermaid data flow diagram, graduated example queries, and concise metadata overview table. Requires schema.yaml with complete descriptions (run schema-enricher first if needed) and a complete metadata.yaml.
 ---
 
 # README Generator
 
-**Prerequisites:** Run `schema-enricher` first if schema.yaml is missing descriptions; run `metadata-manager` first if metadata.yaml is incomplete.
+**Prerequisites:** Run `schema-enricher` first if schema.yaml is missing descriptions; ensure metadata.yaml is present and complete.
 **When to use:** Creating or updating README.md for any shared dataset, derived table, or table with multiple downstream consumers
 
 ## 🚨 REQUIRED READING - Start Here
@@ -122,7 +122,6 @@ Report:
 | Skill | When to invoke |
 |---|---|
 | `schema-enricher` | Run first if schema.yaml is missing descriptions — needed for Notes & Conventions |
-| `metadata-manager` | Run first if metadata.yaml is incomplete — needed for Overview table |
 
 ## Decision Tree: Rich vs. Minimal Style
 
