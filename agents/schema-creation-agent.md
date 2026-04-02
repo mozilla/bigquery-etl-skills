@@ -82,6 +82,9 @@ List all output files written.
 
 ## Example Run
 
+In claude:
+`Run schema-creation-agent for moz-fx-data-shared-prod.telemetry_derived.newtab_daily_interactions_aggregates_v1`
+
 **Table:** `telemetry_derived.newtab_daily_interactions_aggregates_v1`
 **Run date:** 2026-03-11
 
