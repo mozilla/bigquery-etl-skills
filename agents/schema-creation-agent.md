@@ -1,6 +1,9 @@
 ---
 name: schema-creation-agent
-description: Enriches schema.yaml files for BigQuery tables in the bigquery-etl repository. Creates schema.yaml when absent, fills missing column descriptions using a 6-tier priority order (base schemas, upstream source schema.yaml, query context, application context), validates columns against query output, creates or updates README.md, and generates summary reports. Use when you need to create or improve schema documentation for a BigQuery table.
+description: Generates or enriches the schema and README for query files in the bigquery-etl repository.
+It creates a schema.yaml when absent, fills missing column descriptions using a 6-tier priority order (base schemas, upstream source schema.yaml, query context, application context), validates columns against the query output, creates or updates README.md and generates summary reports.
+
+when to use it: Use this agent to create or improve schema documentation for a BigQuery table.
 skills: schema-enricher, schema-readme-generator
 model: opus
 ---
