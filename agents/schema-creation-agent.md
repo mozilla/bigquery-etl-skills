@@ -97,4 +97,7 @@ In claude:
 - `sql/moz-fx-data-shared-prod/telemetry_derived/newtab_daily_interactions_aggregates_v1/schema.yaml`
 - `sql/moz-fx-data-shared-prod/telemetry_derived/newtab_daily_interactions_aggregates_v1/README.md`
 - Summary and missing_metadata files written by `schema-enricher`
+  - `bigquery_etl/schema/missing_metadata/<table>_missing_metadata.yaml`
+  - `bigquery_etl/schema/missing_metadata/<table>-metadata-summary.md`
+
 
