@@ -20,6 +20,12 @@ This plugin provides specialized skills for BigQuery ETL workflows. Skills are a
 | sql-test-generator | Unit test generation | Creating, updating, and running unit tests |
 | bigconfig-generator | Data quality monitoring | Adding Bigeye monitoring configurations |
 
+### Analysis
+
+| Skill | Purpose | Claude uses when |
+|-------|---------|-------------|
+| cx-rag *(active development)* | Customer experience RAG — retrieves and synthesizes answers from SUMO/Kitsune, Zendesk, and the Mozilla Knowledge Base | Answering questions about user sentiment, support topics, or bug reports |
+
 ### Meta Skills
 
 | Skill | Purpose | Claude uses when |

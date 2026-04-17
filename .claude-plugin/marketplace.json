@@ -31,7 +31,8 @@
         "./skills/column-description-finder",
         "./skills/schema-enricher",
         "./skills/schema-readme-generator",
-        "./skills/glean-description-lookup"
+        "./skills/glean-description-lookup",
+        "./skills/cx-rag"
       ]
     }
   ]
