@@ -78,7 +78,7 @@ Using the audit output from Step 0c, categorize every column:
 2. If found — the description is valid but sourced from a **local-only** file. Tag the column as `local-only` and capture it in `local_only_base_schema_columns` in Step 6.
 3. If not found in any local file either — flag for description fill in Step 2.
 
-Base schema priority order applied by the audit script is defined in `column-description-finder/references/column_definition_yaml_guide.md` (app-specific → dataset-specific → global).
+Base schema priority order applied by the audit script is defined in `skills/column-description-finder/references/column_definition_yaml_guide.md` (app-specific → dataset-specific → global).
 
 Proceed to Step 2 for all columns with no description in any base schema (live or local).
 
@@ -90,7 +90,8 @@ For each column without a current description in schema.yaml, use this priority 
 
 4. **Upstream source schema.yaml** — for columns that are pass-through dimensions from a source table:
    - Identify the source table(s) from the FROM clause of `query.sql`
-   - Locate the source table's directory under `sql/` and read its `schema.yaml`
+   - If the source table ends in `_live` or `_stable` (a Glean ingestion table): invoke the `glean-description-lookup` skill to fetch descriptions from the Glean Dictionary — no local `schema.yaml` exists for those tables
+   - Otherwise: locate the source table's directory under `sql/` and read its `schema.yaml`
    - If the column exists and has a description, copy it directly
    - If the upstream `schema.yaml` is absent or the column has no description there, fall through to priority 5
 
@@ -210,6 +211,15 @@ local_only_base_schema_columns:
 | Column specific to one product (newtab, pocket, ads) | `app_<product_name>.yaml` |
 | Column specific to one dataset | `<dataset_name>.yaml` |
 
+⚠️ **Apply product-specificity check first.** A column that appears only in one
+dataset is not automatically a `<dataset_name>.yaml` candidate — if the column
+represents a product feature or product-scoped concept, it belongs in
+`app_<product_name>.yaml` regardless of which dataset it lives in.
+
+For auditing `recommended_target` across multiple tables at once, use the
+`base-schema-audit` skill (decision tree:
+`skills/base-schema-audit/references/base_schema_classification_guide.md`).
+
 If neither condition is met, skip this step and note in the summary:
 `<table_name>_missing_metadata.yaml not created — all columns matched in live base schemas`
 
@@ -308,6 +318,9 @@ If any file is missing, create it before proceeding.
 | Skill | When to invoke |
 |-------|----------------|
 | `column-description-finder` | **Always** — invoked in Step 0c to audit base schema coverage using live GitHub schema files |
+| `glean-description-lookup` | Step 2 priority 4 — when the upstream source table ends in `_live` or `_stable` (no local schema.yaml) |
+| `base-schema-audit` | Before enriching many tables — classifies missing columns into correct base schema targets across a full dataset |
+| `create-pr` | After enrichment is complete — stages, commits, and opens a draft PR |
 
 ## Key Commands
 

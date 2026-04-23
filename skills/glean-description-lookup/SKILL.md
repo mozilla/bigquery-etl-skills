@@ -5,6 +5,7 @@ description: Use this skill when looking up field descriptions for Mozilla Glean
 
 # Glean Description Lookup
 
+**Composable:** Invoked by schema-enricher (Step 2, priority 4 when the upstream source table ends in `_live` or `_stable`)
 **When to use:** A source table ends in `_live` or `_stable` and you need field descriptions for schema.yaml generation or enrichment
 
 ## ⚠️ Scope — Only for `_live` and `_stable` Tables
@@ -166,6 +167,13 @@ Produce a lookup table mapping each field to its type and description. This tabl
 | Field not found in response | Diagnose in order: (1) It may be nested under a RECORD parent — re-request the parent category (e.g. request `client_info` if `client_info.client_id` is missing). (2) It may be an alias false positive from Step 2 — verify the field exists in the Glean Dictionary at all. (3) The field name may use hyphens in the Dictionary (rare) — try replacing underscores with hyphens. (4) The field may not exist in this specific table type; check the dictionary or ask the data owner. |
 | Table not in Glean Dictionary | Fall back to `./bqetl query schema update` to generate schema structure, then infer descriptions from field name and product context. As a secondary fallback, try `https://probeinfo.telemetry.mozilla.org/glean/<hyphenated-app-id>/metrics` — note this API uses **hyphens** in the app_id (e.g. `<app-id>`, not `<app_id>`). |
 | `_stable` table has different schema than `_live` | Use the `_stable` URL — stable tables reflect the validated ping schema. |
+
+## Integration with Other Skills
+
+| Skill | Relationship |
+|---|---|
+| `schema-enricher` | Invokes this skill in Step 2 (priority 4) when the upstream source table ends in `_live` or `_stable` — no local `schema.yaml` exists for those tables |
+| `column-description-finder` | Complementary — use column-description-finder for descriptions in base schema YAML files; use this skill for descriptions from raw Glean tables not in base schemas |
 
 ## Quick Reference
 

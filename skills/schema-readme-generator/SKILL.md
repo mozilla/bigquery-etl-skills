@@ -122,6 +122,7 @@ Report:
 | Skill | When to invoke |
 |---|---|
 | `schema-enricher` | Run first if schema.yaml is missing descriptions — needed for Notes & Conventions |
+| `create-pr` | After README.md is written — stages, commits, and opens a draft PR |
 
 ## Decision Tree: Rich vs. Minimal Style
 

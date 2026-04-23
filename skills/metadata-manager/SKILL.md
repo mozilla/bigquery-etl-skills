@@ -256,8 +256,9 @@ Schema files define BigQuery table structure with field names, types, modes, and
 ### Using Base Schemas for Auto-Populating Descriptions
 
 **Location:**
-- Global schema: `bigquery_etl/schema/global.yaml` (common telemetry fields)
-- Dataset schemas: `bigquery_etl/schema/<dataset_name>.yaml` (dataset-specific fields)
+- Global schema: `bigquery_etl/schema/global.yaml` (common telemetry fields used across all products)
+- Product schemas: `bigquery_etl/schema/app_<product>.yaml` (product-specific fields, e.g. `app_newtab.yaml`, `app_pocket.yaml`) — applied automatically when `app_schema: <product>` is set in `metadata.yaml`
+- Dataset schemas: `bigquery_etl/schema/<dataset_name>.yaml` (dataset-specific fields, e.g. `ads_derived.yaml`)
 
 **Apply base schema descriptions:**
 ```bash
@@ -269,6 +270,12 @@ Schema files define BigQuery table structure with field names, types, modes, and
 
 # Use both (dataset schema takes priority over global schema)
 ./bqetl query schema update <dataset>.<table> --use-dataset-schema --use-global-schema
+```
+
+**Product schemas (`app_<product>.yaml`) are applied via `app_schema` in `metadata.yaml`:**
+```yaml
+# In metadata.yaml — triggers automatic app schema matching:
+app_schema: newtab   # applies bigquery_etl/schema/app_newtab.yaml
 ```
 
 **How it works:**

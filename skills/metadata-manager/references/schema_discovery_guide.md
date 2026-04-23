@@ -120,7 +120,7 @@ Syndicated datasets are special cases where DataHub may be needed:
 **For lineage queries, use the helper script:**
 ```bash
 # Use the DataHub lineage helper script
-python .claude/skills/metadata-manager/scripts/datahub_lineage.py <table_urn>
+python scripts/datahub_lineage.py <table_urn>
 ```
 
 This script filters DataHub responses to return only essential lineage information.
@@ -349,7 +349,7 @@ find sql/ -path "*/firefox_desktop_live/events_v1/schema.yaml"
 **Discovery steps:**
 ```bash
 # 1. Use DataHub lineage helper (NOT for schema)
-python .claude/skills/metadata-manager/scripts/datahub_lineage.py \
+python scripts/datahub_lineage.py \
   "urn:li:dataset:(urn:li:dataPlatform:bigquery,moz-fx-data-shared-prod.telemetry_derived.main_summary_v4,PROD)"
 
 # 2. Script returns filtered upstream tables
