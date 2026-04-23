@@ -43,6 +43,12 @@ skill-name/
    - **metadata-manager** - Schema.yaml, metadata.yaml, dags.yaml generation and updates
    - **sql-test-generator** - Unit test fixtures for SQL queries
    - **bigconfig-generator** - Bigeye monitoring configurations for data quality
+   - **column-description-finder** - Look up and audit column descriptions from base schema YAML files
+   - **schema-enricher** - Enrich schema.yaml with descriptions; generates _missing_metadata.yaml
+   - **schema-readme-generator** - Create or update README.md files for BigQuery ETL tables
+   - **base-schema-audit** - Audit tables for missing descriptions and classify into base schema promotion targets; runs across a dataset or filtered to a table prefix
+   - **glean-description-lookup** - Look up field descriptions for Mozilla Glean metrics
+   - **create-pr** - Create, push, and open a draft pull request
    - **skill-creator** - Meta-skill for creating new skills
 
 2. **Analyze the requested functionality:**
@@ -93,9 +99,13 @@ Analyze each example to identify helpful resources:
 ### Step 3: Initialize the Skill
 Skip if skill already exists.
 
+New skills belong in the `bigquery-etl-skills` repository, not in `bigquery-etl`. From the `bigquery-etl-skills` repo root:
+
 ```bash
-mkdir -p .claude/skills/<skill-name>/{scripts,references,assets}
+mkdir -p skills/<skill-name>/{scripts,references,assets}
 ```
+
+After creating files, register the skill in `.claude-plugin/marketplace.json` by adding `"./skills/<skill-name>"` to the `skills` array — without this the plugin will not load the new skill.
 
 Create SKILL.md with frontmatter:
 ```yaml
@@ -171,6 +181,18 @@ After testing, users may request improvements:
 - **metadata-manager** - Generate/update schema.yaml, metadata.yaml, dags.yaml files
 - **sql-test-generator** - Create and update unit test fixtures for SQL queries
 - **bigconfig-generator** - Create Bigeye monitoring configurations for data quality checks
+
+**Schema workflows:**
+- **column-description-finder** - Look up, audit, and manage column descriptions from base schema YAML files; audit a table's base schema coverage
+- **schema-enricher** - Enrich schema.yaml files with column descriptions from base schemas, upstream sources, and query/application context; generates _missing_metadata.yaml
+- **schema-readme-generator** - Create or update README.md files for BigQuery ETL tables
+- **base-schema-audit** - Audit tables for missing column descriptions and classify each into the correct base schema promotion target (global.yaml, app_<product>.yaml, <dataset_name>.yaml); runs across an entire dataset or filtered to a table prefix
+
+**Discovery:**
+- **glean-description-lookup** - Look up field descriptions for Mozilla Glean metrics from the Glean Dictionary
+
+**Deployment:**
+- **create-pr** - Create, push, and open a draft pull request for completed work
 
 **Meta:**
 - **skill-creator** - Create new skills with conflict checking

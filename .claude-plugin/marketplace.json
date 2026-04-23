@@ -18,7 +18,9 @@
       "strict": false,
       "agents": [
         "./agents/etl-orchestrator.md",
-        "./agents/schema-creation-agent.md"
+        "./agents/schema-creation-agent.md",
+        "./agents/base-schema-curator.md",
+        "./agents/missing-metadata-schema-curator.md"
       ],
       "skills": [
         "./skills/bigquery-etl-core",
@@ -31,7 +33,9 @@
         "./skills/column-description-finder",
         "./skills/schema-enricher",
         "./skills/schema-readme-generator",
-        "./skills/glean-description-lookup"
+        "./skills/glean-description-lookup",
+        "./skills/base-schema-audit",
+        "./skills/create-pr"
       ]
     }
   ]

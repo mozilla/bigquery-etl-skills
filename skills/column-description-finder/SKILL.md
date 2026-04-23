@@ -5,7 +5,7 @@ description: Use this skill when looking up, auditing, or managing column descri
 
 # Column Description Finder
 
-**Composable:** Works with schema-enricher (which invokes this skill in Step 0c for base schema audit)
+**Composable:** Invoked by schema-enricher (Step 0c) and base-schema-audit (Step 3) for base schema coverage audits
 **When to use:** Finding column descriptions, auditing base schema coverage, listing available columns in global/app/dataset schemas
 
 ## Overview
@@ -122,7 +122,7 @@ When creating schema.yaml for a new derived table:
    - Add `--dataset-schema` if the dataset has a matching `<dataset_name>.yaml`
 2. Review which columns are covered by base schemas
 3. Apply base schema descriptions directly from the audit output
-4. For uncovered columns, generate descriptions manually
+4. For uncovered columns, use the `schema-enricher` skill to fill descriptions from upstream schemas, query context, or application context
 
 ### Workflow 3: Identify Missing Descriptions
 
@@ -138,6 +138,7 @@ When checking metadata completeness for a table:
 When a column is used in multiple derived tables and needs a standard description:
 
 1. Determine if it belongs in global.yaml (used everywhere), an app-specific yaml (app_<name>.yaml, cross-dataset for a specific app), or a dataset-specific yaml (<dataset>.yaml)
+   - For auditing an entire dataset or table prefix to classify many columns at once, use the `base-schema-audit` skill instead of doing this manually
 2. READ `assets/example_global_entries.yaml` to see the correct format
 3. Add the entry with name, type, mode, description, and aliases
 4. Verify description quality using the checklist in `references/column_definition_yaml_guide.md`
