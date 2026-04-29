@@ -1,24 +1,20 @@
 ---
 name: metadata-manager
-description: Use this skill when creating or updating DAG configurations (dags.yaml), schema.yaml, and metadata.yaml files for BigQuery tables. Handles creating new DAGs when needed and coordinates test updates when queries are modified (invokes sql-test-generator as needed). Works with bigquery-etl-core, query-writer, and sql-test-generator skills.
+description: Use this skill when creating or updating DAG configurations (dags.yaml) and metadata.yaml files for BigQuery tables. Handles creating new DAGs when needed and coordinates test updates when queries are modified (invokes sql-test-generator as needed). Works with bigquery-etl-core, query-writer, and sql-test-generator skills. For schema.yaml creation and description enrichment, use the schema-enricher or schema-creation-agent instead.
 ---
 
 # Metadata Manager
 
 **Composable:** Works with bigquery-etl-core (for conventions), query-writer (for queries), and sql-test-generator (for test updates)
-**When to use:** Creating/updating DAG configurations, schema.yaml and metadata.yaml files, coordinating test updates when queries are modified
+**When to use:** Creating/updating DAG configurations and metadata.yaml files, coordinating test updates when queries are modified
+
+> **Note:** Schema.yaml creation and description enrichment are handled by the `schema-enricher` skill and `schema-creation-agent`. Use those for schema work.
 
 ## Overview
 
-Generate and manage schema.yaml, metadata.yaml files, and DAG configurations following Mozilla BigQuery ETL conventions. This skill handles:
+Generate and manage metadata.yaml files and DAG configurations following Mozilla BigQuery ETL conventions. This skill handles:
 - Creating new DAGs when no suitable existing DAG is found
-- Generating schema and metadata files for new tables with intelligent descriptions
-  - Gets schema structure from /sql directory or DataHub
-  - Gets descriptions from Glean Dictionary (for `_live`/`_stable`), /sql directory, or DataHub
-  - **Proactively detects ANY missing descriptions and asks user if they want to add them to source tables**
-  - **Auto-generates missing descriptions when adding new tables or editing existing queries**
-  - Improves descriptions with context and clarity
-  - Recommends updates to source tables when descriptions are unclear
+- Generating metadata.yaml files for new tables
 - Coordinating test updates when queries are modified (handles simple updates directly, invokes sql-test-generator for complex fixture creation)
 
 **For comprehensive documentation, see:**
@@ -28,42 +24,22 @@ Generate and manage schema.yaml, metadata.yaml files, and DAG configurations fol
 
 ## 🚨 REQUIRED READING - Start Here
 
-**BEFORE creating or modifying metadata/schema/DAG files, READ these references:**
+**BEFORE creating or modifying metadata/DAG files, READ these references:**
 
-1. **Schema Discovery:** READ `references/schema_discovery_guide.md` (for schema generation)
-   - Priority order: /sql → Glean Dictionary → DataHub (last resort/validation)
-   - Token-efficient patterns for getting source schemas
-   - When to use each source
-
-2. **DAG Discovery:** READ `references/dag_discovery.md`
+1. **DAG Discovery:** READ `references/dag_discovery.md`
    - How to find the right Airflow DAG for your table
    - Common DAG patterns
 
-3. **DAG Creation:** READ `references/dag_creation_guide.md` (when creating new DAGs)
+2. **DAG Creation:** READ `references/dag_creation_guide.md` (when creating new DAGs)
    - When to create a new DAG vs reuse existing
    - Complete DAG creation workflow
    - Configuration options and best practices
 
-4. **Metadata YAML Guide:** READ `references/metadata_yaml_guide.md`
+3. **Metadata YAML Guide:** READ `references/metadata_yaml_guide.md`
    - All metadata.yaml options and their meanings
    - Scheduling configuration
    - Partitioning and clustering options
    - Ownership and labels
-
-5. **Schema YAML Guide:** READ `references/schema_yaml_guide.md`
-   - Field types and modes (REQUIRED, NULLABLE, REPEATED)
-   - Nested and repeated structures
-   - Description best practices
-
-6. **Schema Description Improvements:** READ `references/schema_description_improvements.md`
-   - When to improve source descriptions
-   - How to recommend updates to source tables
-   - Description improvement checklist
-
-7. **Glean Dictionary Patterns:** READ `references/glean_dictionary_patterns.md` (for _live/_stable tables)
-   - Token-efficient extraction from large files
-   - Finding Glean Dictionary files
-   - Common table patterns
 
 ## 📋 Templates - Copy These Structures
 
@@ -88,14 +64,6 @@ Generate and manage schema.yaml, metadata.yaml files, and DAG configurations fol
 
 - **Full refresh table?** → READ `assets/metadata_template_full_refresh.yaml`
   - For tables that recalculate all data each run
-
-**When creating schema.yaml, READ and COPY from these templates:**
-
-- **Simple flat schema?** → READ `assets/schema_template_basic.yaml`
-  - Basic field types and descriptions
-
-- **Nested/repeated fields?** → READ `assets/schema_template_with_nested.yaml`
-  - RECORD types and array structures
 
 ## Quick Start
 
@@ -125,32 +93,9 @@ Generate and manage schema.yaml, metadata.yaml files, and DAG configurations fol
 - Customize with owners, description, labels, scheduling, and BigQuery config
 - See `references/metadata_yaml_guide.md` for detailed options
 
-**Step 4: Create schema.yaml with intelligent descriptions**
-- **If query.sql exists:** Run `./bqetl query schema update <dataset>.<table>` to auto-generate structure
-- **Get source table schemas** using priority order (see `references/schema_discovery_guide.md`):
-  1. Check `/sql` directory for schema structure (ALWAYS FIRST)
-  2. Use DataHub for schema structure (when not in `/sql`)
-- **Get descriptions** using priority order:
-  1. Glean Dictionary for `_live`/`_stable` table descriptions via https://dictionary.telemetry.mozilla.org/
-  2. `/sql` directory schema.yaml files for derived tables
-  3. DataHub for descriptions (when not in above sources)
-  - **IMPORTANT:** Glean Dictionary provides descriptions only, NOT schemas
-- **Apply base schema descriptions (RECOMMENDED):**
-  - Run: `./bqetl query schema update <dataset>.<table> --use-global-schema`
-  - For ads data: `./bqetl query schema update <dataset>.<table> --use-dataset-schema --use-global-schema`
-  - Auto-populates descriptions for standard fields (submission_date, client_id, dau, etc.)
-  - See "Using Base Schemas for Auto-Populating Descriptions" section below for details
-- **Check for ANY missing descriptions:**
-  - **For source tables:** Notify user and ask if they want to generate descriptions for source tables
-  - **For new tables or editing existing queries:** Auto-generate ANY missing descriptions (no asking)
-  - This improves metadata completeness for all downstream consumers
-- **Use source descriptions as base** and improve them:
-  - Add context specific to derived table
-  - Clarify transformations
-  - Fill gaps in source descriptions
-- **Generate recommendations** for source table description updates when needed
-- See `references/schema_description_improvements.md` for improvement workflow
-- See `references/glean_dictionary_patterns.md` for token-efficient Glean Dictionary usage
+**Step 4: Create schema.yaml**
+> Schema.yaml creation and description enrichment are owned by the `schema-enricher` skill.
+> Invoke `schema-enricher` or `schema-creation-agent` for this step.
 
 **Step 5: Deploy schema (if updating existing table)**
 ```bash
@@ -169,11 +114,7 @@ ls tests/sql/<project>/<dataset>/<table>/
 **2. Update the query.sql file** with your changes
 
 **3. Update schema.yaml if output changed:**
-```bash
-./bqetl query schema update <dataset>.<table>
-```
-- Review changes
-- Add descriptions for new fields
+> Delegate schema.yaml updates to the `schema-enricher` skill.
 
 **4. If tests exist, update them:**
 - **New source tables added?** → **Invoke sql-test-generator skill** to add fixtures to ALL tests
@@ -243,137 +184,6 @@ When no suitable DAG exists:
 - Common patterns and examples
 - Best practices and troubleshooting
 
-## Schema Files (schema.yaml)
-
-Schema files define BigQuery table structure with field names, types, modes, and descriptions.
-
-**Quick reference:**
-- Common types: STRING, INTEGER, FLOAT, BOOLEAN, DATE, TIMESTAMP, RECORD, NUMERIC
-- Modes: NULLABLE (default), REQUIRED, REPEATED (for arrays)
-- Descriptions are **required** for all fields in new schemas
-- For nested fields, use RECORD type with nested `fields:` list
-
-### Using Base Schemas for Auto-Populating Descriptions
-
-**Location:**
-- Global schema: `bigquery_etl/schema/global.yaml` (common telemetry fields used across all products)
-- Product schemas: `bigquery_etl/schema/app_<product>.yaml` (product-specific fields, e.g. `app_newtab.yaml`, `app_pocket.yaml`) — applied automatically when `app_schema: <product>` is set in `metadata.yaml`
-- Dataset schemas: `bigquery_etl/schema/<dataset_name>.yaml` (dataset-specific fields, e.g. `ads_derived.yaml`)
-
-**Apply base schema descriptions:**
-```bash
-# Use global schema for common fields (submission_date, client_id, etc.)
-./bqetl query schema update <dataset>.<table> --use-global-schema
-
-# Use dataset-specific schema (e.g., ads_derived.yaml for ads data)
-./bqetl query schema update <dataset>.<table> --use-dataset-schema
-
-# Use both (dataset schema takes priority over global schema)
-./bqetl query schema update <dataset>.<table> --use-dataset-schema --use-global-schema
-```
-
-**Product schemas (`app_<product>.yaml`) are applied via `app_schema` in `metadata.yaml`:**
-```yaml
-# In metadata.yaml — triggers automatic app schema matching:
-app_schema: newtab   # applies bigquery_etl/schema/app_newtab.yaml
-```
-
-**How it works:**
-1. **Matches fields by name or alias** - If your query has `sub_date`, it matches `submission_date` via alias
-2. **Applies descriptions** - Copies description from base schema to your schema.yaml
-3. **Warns about overwrites** - Shows which existing descriptions were replaced
-4. **Recommends canonical names** - Suggests renaming aliased fields (e.g., `sub_date` → `submission_date`)
-5. **Identifies missing descriptions** - Lists fields not found in base schemas
-
-**Priority order:** Dataset schema → Global schema → Missing description warning
-
-**Example global.yaml fields:**
-- `submission_date`, `client_id`, `country`, `sample_id`, `normalized_channel`
-- `dau`, `wau`, `mau` (activity metrics)
-- `attribution_campaign`, `attribution_source`, `attribution_medium`
-- See full list: `bigquery_etl/schema/global.yaml`
-
-**Example ads_derived.yaml fields:**
-- `impressions`, `clicks`, `revenue`, `cpm`, `click_rate`
-- `campaign_id`, `advertiser`, `creative_id`, `flight_id`
-- `partner_name`, `provider`, `rate_type`
-- See full list: `bigquery_etl/schema/ads_derived.yaml`
-
-**Preview before applying (use helper script):**
-```bash
-# Preview what descriptions would be applied without making changes
-python scripts/preview_base_schema.py <dataset>.<table>
-```
-
-### Intelligent Schema Generation
-
-When generating schemas for derived tables, follow this workflow:
-
-**1. Discover source table schemas (use priority order):**
-   - **FIRST:** `/sql` directory for schema structure
-   - **SECOND:** DataHub for schema structure (when not in `/sql`)
-
-**2. Discover descriptions (use priority order):**
-   - **FIRST:** Glean Dictionary for `_live`/`_stable` table descriptions via https://dictionary.telemetry.mozilla.org/
-   - **SECOND:** `/sql` directory schema.yaml files for derived tables
-   - **THIRD:** DataHub for descriptions (when not in above sources)
-   - **IMPORTANT:** Glean Dictionary provides descriptions only, NOT schemas
-
-**3. Apply base schema descriptions (RECOMMENDED for standard fields):**
-   - **After** generating initial schema, use base schemas to auto-populate descriptions
-   - Run: `./bqetl query schema update <dataset>.<table> --use-global-schema`
-   - For ads data, also use: `--use-dataset-schema` (applies `ads_derived.yaml`)
-   - This ensures consistent descriptions for common fields like `submission_date`, `client_id`, etc.
-   - Preview changes first: `python scripts/preview_base_schema.py <dataset>.<table>`
-   - See "Using Base Schemas for Auto-Populating Descriptions" section above for details
-
-**4. Check for ANY missing descriptions:**
-   - Detect missing descriptions in source tables or target table
-   - **For source table missing descriptions:** Notify user and ask if they want to generate descriptions for source tables
-   - **For new tables or editing existing queries:** Auto-generate ANY missing descriptions without asking
-   - This proactively improves metadata completeness
-
-**5. Use source descriptions as base:**
-   - Copy descriptions from source tables
-   - Maintain consistency across derived tables
-
-**6. Improve descriptions when needed:**
-   - Add context specific to derived table
-   - Clarify transformations or aggregations
-   - Simplify technical jargon
-   - Fill gaps in source descriptions
-
-**7. Recommend source updates (for existing descriptions):**
-   - When source description exists but is unclear or incomplete
-   - When improved description would benefit all downstream tables
-   - Generate clear recommendations for source table owners
-
-**See `references/schema_discovery_guide.md` for:**
-- Complete schema discovery priority order
-- How to efficiently search `/sql`, Glean Dictionary, and DataHub
-- Token-efficient patterns for large files
-
-**See `references/glean_dictionary_patterns.md` for:**
-- Finding Glean Dictionary files
-- Token-efficient extraction for large tables
-- Common table patterns (_live, _stable, events, metrics)
-
-**See `references/schema_description_improvements.md` for:**
-- When to improve descriptions
-- How to recommend source table updates
-- Description improvement checklist
-
-**Auto-generate from query:**
-```bash
-./bqetl query schema update <dataset>.<table>
-```
-
-**See `references/schema_yaml_guide.md` for:**
-- Complete field type reference
-- Nested/repeated field examples
-- Description best practices
-- Common telemetry field patterns
-
 ## Metadata Files (metadata.yaml)
 
 Metadata files define table ownership, scheduling, partitioning, and BigQuery configuration.
@@ -410,9 +220,12 @@ Metadata files define table ownership, scheduling, partitioning, and BigQuery co
 - Uses common metadata structures and labeling
 
 ### Works with query-writer
-- **After query-writer creates queries:** Use metadata-manager to generate schema/metadata
-- Runs schema extraction from query output
+- **After query-writer creates queries:** Use metadata-manager to generate metadata.yaml
 - **Invocation:** After query.sql is written
+
+### Works with schema-enricher / schema-creation-agent
+- **For schema.yaml creation and description enrichment:** Delegate to `schema-enricher` or `schema-creation-agent`
+- **Invocation:** After metadata.yaml is created, invoke schema-enricher for schema work
 
 ### Works with sql-test-generator
 - **When queries are modified:** Coordinates test update workflow
@@ -424,12 +237,13 @@ Metadata files define table ownership, scheduling, partitioning, and BigQuery co
 
 **Creating new table:**
 1. query-writer creates query.sql
-2. **metadata-manager** generates schema.yaml and metadata.yaml
-3. metadata-manager invokes sql-test-generator for tests
+2. **metadata-manager** generates metadata.yaml and DAG configuration
+3. **schema-enricher** or **schema-creation-agent** creates and enriches schema.yaml
+4. metadata-manager invokes sql-test-generator for tests
 
 **Updating existing query:**
 1. Modify query.sql
-2. **metadata-manager** updates schema.yaml
+2. **schema-enricher** updates schema.yaml
 3. **metadata-manager** coordinates test updates (handles simple updates, invokes sql-test-generator for complex fixture creation)
 4. Run tests to validate
 
@@ -439,14 +253,14 @@ Metadata files define table ownership, scheduling, partitioning, and BigQuery co
 # Create new query directory with templates
 ./bqetl query create <dataset>.<table> --dag <dag_name>
 
-# Auto-generate/update schema from query output
-./bqetl query schema update <dataset>.<table>
-
 # Deploy schema to BigQuery (updates existing table)
 ./bqetl query schema deploy <dataset>.<table>
 
 # Validate query and metadata
 ./bqetl query validate <dataset>.<table>
+
+# Validate DAG configuration
+./bqetl dag validate <dag_name>
 
 # Run tests
 pytest tests/sql/<project>/<dataset>/<table>/ -v
@@ -477,18 +291,6 @@ When uncertain about a configuration:
 - Set appropriate partitioning and clustering for query patterns
 - Consider data retention policies (expiration_days)
 
-### For schema.yaml
-- Always include descriptions for all fields
-- **Use base schemas** to auto-populate standard field descriptions:
-  - Run `./bqetl query schema update <dataset>.<table> --use-global-schema` for common fields
-  - Ensures consistent descriptions across tables
-  - Saves time writing descriptions for standard fields like `submission_date`, `client_id`, etc.
-- Use appropriate types (DATE for dates, not STRING)
-- Default to NULLABLE mode unless truly required
-- Order fields as they appear in query SELECT
-- Group related fields together
-- Document units, formats, and constraints in descriptions
-
 ### For test updates
 - **Always run tests after query changes**
 - Invoke sql-test-generator for new source tables or complex changes
@@ -501,7 +303,6 @@ When uncertain about a configuration:
 This skill provides helper scripts in `scripts/`:
 - **`detect_teams.py`** - Find GitHub teams from metadata.yaml files
 - **`datahub_lineage.py`** - Generate DataHub lineage query parameters
-- **`preview_base_schema.py`** - Preview base schema matches before applying
 
 **See `references/script_maintenance.md` for:**
 - Testing all scripts
@@ -514,32 +315,18 @@ This skill provides helper scripts in `scripts/`:
 **In the repository:**
 - Simple metadata: `sql/moz-fx-data-shared-prod/mozilla_vpn_derived/users_v1/metadata.yaml`
 - Partitioned metadata: `sql/moz-fx-data-shared-prod/telemetry_derived/clients_daily_event_v1/metadata.yaml`
-- Simple schema: `sql/moz-fx-data-shared-prod/mozilla_vpn_derived/users_v1/schema.yaml`
-- Complex schema: `sql/moz-fx-data-shared-prod/telemetry_derived/event_events_v1/schema.yaml`
 
 **In this skill:**
-- See `assets/` directory for metadata and schema templates
+- See `assets/` directory for metadata and DAG templates
 - See `references/` directory for complete documentation
 
 ### DataHub Usage (CRITICAL for Token Efficiency)
 
 **BEFORE using any DataHub MCP tools (`mcp__datahub-cloud__*`), you MUST:**
-- **READ `../bigquery-etl-core/references/datahub_best_practices.md`** - Token-efficient patterns for schema and DAG discovery
-- Always prefer local files (dags.yaml, metadata.yaml, schema.yaml) over DataHub queries
-
-**Schema Discovery Priority:**
-1. **FIRST:** `/sql` directory (schema.yaml files)
-2. **SECOND:** DataHub (when schema not in `/sql`)
-
-**Description Discovery Priority (for `_live`/`_stable` tables):**
-1. **FIRST:** Glean Dictionary via https://dictionary.telemetry.mozilla.org/
-2. **SECOND:** DataHub (when descriptions not in Glean Dictionary)
-
-**IMPORTANT:** Glean Dictionary provides **descriptions only**, NOT schemas. Always get schema structure from `/sql` or DataHub.
+- **READ `../bigquery-etl-core/references/datahub_best_practices.md`** - Token-efficient patterns for DAG discovery
+- Always prefer local files (dags.yaml, metadata.yaml) over DataHub queries
 
 **Use DataHub for:**
-- Schema structure when not available in `/sql`
-- Field descriptions when not in Glean Dictionary (for `_live`/`_stable` tables) or `/sql`
 - Lineage/dependencies when can't infer from bqetl:
   - Tables from Glean telemetry or older telemetry sources
   - Syndicated datasets (directories without query.sql/query.py/view.sql)
