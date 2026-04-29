@@ -106,6 +106,11 @@ Tests live in: `tests/sql/<project>/<dataset>/<table>/<test_name>/`
 - Expected output: `expect.yaml`
 - Query parameters (if needed): `query_params.yaml`
 
+**Schema files (required alongside fixtures):**
+- `<project>.<dataset>.<table>.schema.json` for the output table and each source table
+- Placed at the **table-level** directory (`tests/sql/<project>/<dataset>/<table>/`) when the schema applies to all tests for that table (preferred), or inside an individual test directory when test-specific
+- See "Creating schema.json Files" step in the Workflow section for full details
+
 ## Critical Requirements
 
 ### ⚠️ PREVENTING PRODUCTION QUERIES - READ THIS FIRST ⚠️
@@ -267,7 +272,43 @@ See https://mozilla.github.io/bigquery-etl/cookbooks/testing/ for more details.
 7. **Create expect.yaml and query_params.yaml** (if needed)
    - Use the template structures from step 5
 
-8. **Run the test:**
+8. **Create schema.json files for the output table and all source tables**
+
+   Schema.json files tell the test runner each table's schema without querying BigQuery. Create one for the output table and one for every source table that has a fixture.
+
+   **Where to place them:**
+   - At the table-level test directory (shared across all tests): `tests/sql/<project>/<dataset>/<table>/`
+   - OR inside an individual test directory if the schema is test-specific: `tests/sql/<project>/<dataset>/<table>/<test_name>/`
+   - Prefer the **table-level** location when the schema applies to all tests for that table.
+
+   **Naming convention:** `<project>.<dataset>.<table>.schema.json`
+
+   For example:
+   - `moz-fx-data-shared-prod.telemetry.desktop_active_users.schema.json` (source table)
+   - `moz-fx-data-shared-prod.firefox_desktop_derived.my_table_v1.schema.json` (output table)
+
+   **Content format:** Flat JSON array with one object per field containing `type` and `name`. Include `mode`, `description`, and nested `fields` for RECORD types when present in the source schema.
+
+   ```json
+   [
+     {"type": "DATE", "name": "submission_date"},
+     {"type": "STRING", "name": "client_id"},
+     {"type": "INTEGER", "name": "dau"}
+   ]
+   ```
+
+   **How to derive the content:**
+   1. Read the table's `schema.yaml` from the `sql/` directory
+   2. For each field, extract `name` and `type`
+   3. Include nested `fields` arrays for RECORD types
+   4. Include `mode` and `description` when present in the source schema
+
+   **Checklist:**
+   - [ ] Created a `schema.json` for the output table
+   - [ ] Created a `schema.json` for every source table that has a fixture file
+   - [ ] File names match exactly how the table is referenced in the query (same as fixture naming)
+
+9. **Run the test:**
    ```bash
    pytest tests/sql/<project>/<dataset>/<table>/<test_name>/ -v
    ```
@@ -293,7 +334,7 @@ See https://mozilla.github.io/bigquery-etl/cookbooks/testing/ for more details.
    pytest tests/sql/.../test_name/ -xvv
    ```
 
-9. **Fix common test failures** (if test fails):
+10. **Fix common test failures** (if test fails):
 
    **A. Timestamp format mismatches** (VERY COMMON):
    - If test fails with timestamp format differences like `2025-06-01T10:00:00+00:00` != `2025-06-01 10:00:00`
@@ -307,14 +348,14 @@ See https://mozilla.github.io/bigquery-etl/cookbooks/testing/ for more details.
    - This includes both row-level ordering AND nested field ordering (maps, arrays)
    - See `references/common_test_failures.md` section 2 for detailed examples
 
-10. **Verify you're NOT querying production:**
+11. **Verify you're NOT querying production:**
    - ✅ Check pytest output for "Initialized" lines - count should match your table checklist from step 2
    - ✅ Test should complete in <30 seconds
    - ✅ Results should be small (< 10 rows typically)
    - ❌ If you see thousands of rows, real production IDs, or slow execution → you're querying production!
    - ❌ Missing "Initialized" line for a table → add that fixture file
 
-11. **Ask about data quality monitoring:**
+12. **Ask about data quality monitoring:**
    - After tests pass successfully, check if monitoring exists:
      - Check for bigconfig.yml file: `sql/<project>/<dataset>/<table>/bigconfig.yml`
    - If bigconfig.yml does NOT exist, proactively ask the user:
@@ -330,6 +371,7 @@ See https://mozilla.github.io/bigquery-etl/cookbooks/testing/ for more details.
 Before finalizing tests, verify:
 - [ ] I ran `grep -E "FROM|JOIN" query.sql` to find all source tables
 - [ ] I created a fixture file for each source table found
+- [ ] I created a `schema.json` for the output table and each source table
 - [ ] I checked pytest output for "Initialized" messages matching each source table
 - [ ] Test results are small and match my expect.yaml
 - [ ] Test runs quickly (<30 seconds)
